@@ -1,45 +1,63 @@
 import streamlit as st
 import pandas as pd
 import random
-import json
-import math
-import extra_streamlit_components as stx
 
-# -----------------------------------------------------------------------------
-# 1. KONFIGURATION & CSS
-# -----------------------------------------------------------------------------
-st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="wide")
+# =============================================================================
+# 1. KONFIGURATION
+# =============================================================================
+st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="centered")
 
+# =============================================================================
+# 2. DYNAMISCHES CSS (INKL. GEZIELTER GRÜNER FÄRBUNG FÜR "NEU WÜRFELN")
+# =============================================================================
 st.markdown("""
     <style>
-        /* Hauptcontainer */
-        [data-testid="stMainBlockContainer"] {
-            max-width: 900px !important;
+        .main .block-container {
+            max-width: 850px !important;
             margin: 0 auto !important;
-            align-items: center !important;
-            padding-top: 1rem !important;
+            padding-top: 1.5rem !important;
             padding-bottom: 3rem !important;
         }
-
         .centered-text { text-align: center !important; }
 
-        /* --------------------------------------------------------------------- */
-        /* DROPDOWN-MENÜS: Getrennte vertikale Positionen                       */
-        /* --------------------------------------------------------------------- */
-        .dropdown-links div[data-testid="stSelectbox"] {
-            position: relative;
-            top: -10px;
+        div[data-testid="stVerticalBlock"] {
+            gap: 0.3rem !important;
         }
 
-        .dropdown-rechts div[data-testid="stSelectbox"] {
-            position: relative;
-            top: -10px;
+        div[data-testid="stForm"] {
+            margin-top: 12px !important;
+            margin-bottom: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            background-color: #ffffff !important;
         }
 
-        /* --------------------------------------------------------------------- */
-        /* TABELLENZEILEN - PERFEKTE HORIZONTALE FLUCHT                           */
-        /* --------------------------------------------------------------------- */
-        
+        .th-da   { position: relative; top: -2px; text-align: left; }
+        .th-vn   { position: relative; top: 0px; text-align: left; }
+        .th-nn   { position: relative; top: 2px; text-align: left; }
+        .th-komp { position: relative; top: 0px; left: -20px; text-align: center; }
+
+        .row-vn  { position: relative; top: 5px; margin: 0 !important; padding: 0 !important; }
+        .row-nn  { position: relative; top: 5px; margin: 0 !important; padding: 0 !important; }
+
+        .sum-number { position: relative; top: 0px; text-align: center; }
+        .sum-label  { position: relative; top: 0px; }
+        .sum-badge  { position: relative; top: 0px; left: -15px; }
+
+        .btn-new-list-container {
+            position: relative;
+            top: 28px;
+        }
+
+        div[data-testid="stRadio"] > label,
+        div[data-testid="stRadio"] label p,
+        div[data-testid="stRadio"] span {
+            font-weight: 700 !important;
+            color: #2d3748 !important;
+            font-size: 1rem !important;
+        }
+
         div[data-testid="stHorizontalBlock"] {
             align-items: center !important; 
         }
@@ -52,11 +70,6 @@ st.markdown("""
             padding: 0 4px !important;
         }
 
-        div[data-testid="stVerticalBlock"] > div {
-            margin-bottom: 0 !important;
-        }
-
-        /* ----- SPALTE 1: Checkbox ----- */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) div[data-testid="stCheckbox"] {
             display: flex !important;
             align-items: center !important;
@@ -65,21 +78,7 @@ st.markdown("""
             margin: 0 !important;
             padding: 0 !important;
         }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(1) div[data-testid="stCheckbox"] label {
-            min-height: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
 
-        /* ----- SPALTE 2 & 3: Vorname & Nachname ----- */
-        div[data-testid="stHorizontalBlock"] > div:nth-child(2) div[data-testid="stMarkdownContainer"],
-        div[data-testid="stHorizontalBlock"] > div:nth-child(3) div[data-testid="stMarkdownContainer"] {
-            display: flex !important;
-            align-items: center !important;
-            height: 36px !important; 
-            margin: 0 !important;
-            padding: 0 !important;
-        }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) p,
         div[data-testid="stHorizontalBlock"] > div:nth-child(3) p {
             margin: 0 !important;
@@ -90,7 +89,6 @@ st.markdown("""
             white-space: nowrap;
         }
 
-        /* ----- SPALTE 4, 5 & 6: Leistungs-Buttons ----- */
         div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) div[data-testid="stButton"] {
             display: flex !important;
             align-items: center !important;
@@ -132,18 +130,6 @@ st.markdown("""
             font-weight: 700 !important;
         }
 
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button p {
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1 !important;
-            font-size: 0.85rem !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            color: inherit !important;
-        }
-
-        /* ----- SPALTE 7: Lösch-Button ----- */
         div[data-testid="stHorizontalBlock"] > div:nth-child(7) div[data-testid="stButton"] {
             display: flex !important;
             align-items: center !important;
@@ -172,7 +158,7 @@ st.markdown("""
 
         .table-header {
             font-weight: 700;
-            color: #718096;
+            color: #3b3b3b;
             font-size: 0.88rem;
             margin: 0 !important;
             padding: 0 !important;
@@ -195,62 +181,62 @@ st.markdown("""
             justify-content: center;
         }
 
-        div[data-testid="stForm"] {
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 12px !important;
-            margin-top: 1.2rem !important;
-            margin-bottom: 1rem !important;
-            background-color: #ffffff !important;
+        .dropdown-links div[data-testid="stSelectbox"],
+        .dropdown-rechts div[data-testid="stSelectbox"] {
+            position: relative;
+            top: -10px;
         }
 
-        div[data-testid="stExpander"] {
-            margin-top: 2rem !important;
-            margin-bottom: 2.5rem !important;
+        .group-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            text-align: center !important;
+        }
+        
+        .group-card ul {
+            list-style-type: none !important;
+            padding: 0 !important;
+            margin: 8px 0 0 -22pt !important;
+            text-align: center !important;
+        }
+        
+        .group-card li {
+            text-align: center !important;
+            margin-bottom: 4px !important;
+        }
+
+        button[kind="primary"][data-testid="baseButton-primary"] {
+            background-color: #2e7d32 !important;
+            border-color: #2e7d32 !important;
+        }
+        button[kind="primary"][data-testid="baseButton-primary"]:hover {
+            background-color: #1b5e20 !important;
+            border-color: #1b5e20 !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------------------------
-# 2. COOKIE MANAGER INITIALISIERUNG & LOGIK
-# -----------------------------------------------------------------------------
-cookie_manager = stx.CookieManager(key="schueler_cookie_mgr")
-
+# =============================================================================
+# 3. INITIALISIERUNG & STATE (12 DIVERSE SCHÜLER INKL. DOPPELTER VORNAMEN)
+# =============================================================================
 DEFAULT_SCHUELER = [
-    {"Anwesend": True, "Vorname": "Schwach 1", "Nachname": "Schwach 1", "Leistungsstufe": "schwach"},
-    {"Anwesend": True, "Vorname": "Schwach 2", "Nachname": "Schwach 2", "Leistungsstufe": "schwach"},
-    {"Anwesend": True, "Vorname": "Schwach 3", "Nachname": "Schwach 3", "Leistungsstufe": "schwach"},
-    {"Anwesend": True, "Vorname": "Schwach 4", "Nachname": "Schwach 4", "Leistungsstufe": "schwach"},
-    {"Anwesend": True, "Vorname": "Mittel 1", "Nachname": "Mittel 1", "Leistungsstufe": "mittel"},
-    {"Anwesend": True, "Vorname": "Mittel 2", "Nachname": "Mittel 2", "Leistungsstufe": "mittel"},
-    {"Anwesend": True, "Vorname": "Mittel 3", "Nachname": "Mittel 3", "Leistungsstufe": "mittel"},
-    {"Anwesend": True, "Vorname": "Stark 1", "Nachname": "Stark 1", "Leistungsstufe": "stark"},
-    {"Anwesend": True, "Vorname": "Stark 2", "Nachname": "Stark 2", "Leistungsstufe": "stark"},
-    {"Anwesend": True, "Vorname": "Stark 3", "Nachname": "Stark 3", "Leistungsstufe": "stark"},
+    {"Anwesend": True, "Vorname": "David", "Nachname": "Weber", "Leistungsstufe": "stark"},
+    {"Anwesend": True, "Vorname": "David", "Nachname": "O'Connor", "Leistungsstufe": "mittel"},
+    {"Anwesend": True, "Vorname": "Anna", "Nachname": "Schmidt", "Leistungsstufe": "schwach"},
+    {"Anwesend": True, "Vorname": "Anna", "Nachname": "Diallo", "Leistungsstufe": "stark"},
+    {"Anwesend": True, "Vorname": "Tariq", "Nachname": "Al-Mansoor", "Leistungsstufe": "mittel"},
+    {"Anwesend": True, "Vorname": "Chiara", "Nachname": "Moretti", "Leistungsstufe": "schwach"},
+    {"Anwesend": True, "Vorname": "Luka", "Nachname": "Petrovic", "Leistungsstufe": "stark"},
+    {"Anwesend": True, "Vorname": "Elif", "Nachname": "Yilmaz", "Leistungsstufe": "mittel"},
+    {"Anwesend": True, "Vorname": "Matteo", "Nachname": "Rossi", "Leistungsstufe": "schwach"},
+    {"Anwesend": True, "Vorname": "Mei", "Nachname": "Lin", "Leistungsstufe": "stark"},
+    {"Anwesend": True, "Vorname": "Zara", "Nachname": "Jenson", "Leistungsstufe": "mittel"},
+    {"Anwesend": True, "Vorname": "Youssef", "Nachname": "Ben Ali", "Leistungsstufe": "schwach"},
 ]
-
-STORAGE_KEY = "gruppen_klassen_liste_cookie"
-
-# Beim ersten Laden kurz auf den CookieManager warten
-raw_val = cookie_manager.get(STORAGE_KEY)
-if raw_val is None and "cookie_initialized" not in st.session_state:
-    st.session_state.cookie_initialized = True
-    st.rerun()
-
-def get_all_saved_classes():
-    if "saved_classes_cache" in st.session_state:
-        return st.session_state.saved_classes_cache
-
-    val = cookie_manager.get(STORAGE_KEY)
-    if val:
-        try:
-            data = json.loads(val) if isinstance(val, str) else val
-            res = data if isinstance(data, dict) else {}
-            st.session_state.saved_classes_cache = res
-            return res
-        except Exception:
-            return {}
-    return {}
 
 if "schueler_df" not in st.session_state:
     st.session_state.schueler_df = pd.DataFrame(DEFAULT_SCHUELER)
@@ -261,12 +247,10 @@ if "show_presentation" not in st.session_state:
     st.session_state.show_presentation = False
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
-if "current_loaded_class" not in st.session_state:
-    st.session_state.current_loaded_class = None
 
-# -----------------------------------------------------------------------------
-# 3. HELPER FUNKTIONEN & GRUPPIERUNGS-LOGIK
-# -----------------------------------------------------------------------------
+# =============================================================================
+# 4. HELPER- & LOGIK-FUNKTIONEN
+# =============================================================================
 def load_excel_flexible(file):
     raw_df = pd.read_excel(file, header=None)
     header_row_idx = None
@@ -442,29 +426,60 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
             
     return gruppen
 
-# -----------------------------------------------------------------------------
-# 4. PRÄSENTATIONSMODUS
-# -----------------------------------------------------------------------------
-st.markdown("<h1 class='centered-text'>👥 Der intelligente Gruppen-Generator</h1>", unsafe_allow_html=True)
 
-with st.expander("ℹ️ Anleitung & Rechtliche Hinweise"):
+# =============================================================================
+# ZENTRIERTE GRID-DARSTELLUNG FÜR PRÄSENTATION
+# =============================================================================
+def render_groups_grid(groups_subset, start_index=1, title_prefix="Gruppe"):
+    for i in range(0, len(groups_subset), 3):
+        cols = st.columns(3)
+        for j in range(3):
+            group_idx = i + j
+            if group_idx < len(groups_subset):
+                with cols[j]:
+                    actual_num = start_index + group_idx
+                    team_members = groups_subset[group_idx]
+                    
+                    content = f"<div class='group-card'><b>{title_prefix} {actual_num}</b><ul>"
+                    for m in team_members:
+                        content += f"<li>{m}</li>"
+                    content += "</ul></div>"
+                    st.markdown(content, unsafe_allow_html=True)
+
+
+# =============================================================================
+# 5. HEADER & INFO-BEREICH
+# =============================================================================
+st.markdown("<h1 class='centered-text'>👥 Kompetenzorientierte Gruppen</h1>", unsafe_allow_html=True)
+
+with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
     st.markdown("""
     ### 🛠️ Kurzanleitung
-    1. **Liste der Lernenden erstellen:** Lade eine Excel-Tabelle (.xlsx/.xls) hoch. Das Tool erkennt dabei eigenständig die passenden Spalten für Vor- und Nachnamen, um die Liste automatisch zu erstellen. Alternativ kannst du Lernende auch manuell über das Formular am Tabellenende hinzufügen.
+    1. **Liste der Lernenden erstellen:** Lade eine Excel-Tabelle (.xlsx/.xls) hoch oder trage Lernende manuell unten ein.
     2. **Anwesenheit & Kompetenz:** 
-        - Markiere anwesende Lernende über die Checkbox in der Spalte **„Da?“**.
-        - Weise über die Buttons **schwach**, **mittel** oder **stark** das jeweilige Kompetenzniveau zu.
-    3. **Klasse speichern (optional):** Klappe den Bereich *„Klasse speichern & laden“* auf, um deine Listen abzuspeichern und später wieder abzurufen.
-    4. **Gruppen generieren:** Wähle unten den Zuteilungsmodus und klicke auf **„Gruppen generieren & Präsentieren“**.
+        - Markiere anwesende Lernende in der Spalte **„Da?“**.
+        - Weise über die Buttons **schwach**, **mittel** oder **stark** das jeweilige Niveau zu.
+    3. **Gruppen generieren:** Wähle unten den Modus und klicke auf **„Gruppen generieren & Präsentieren“**.
 
     ---
-    ### ⚖️ Disclaimer & Datenschutz
-    * **Entwicklung & Transparenz:** Dieses Tool wurde von mir (als Nicht-IT-Experten) mithilfe von Künstlicher Intelligenz (KI) entwickelt. Die KI hat mir versichert, dass die Datenschutzstandards eingehalten werden; ich selbst übernehme jedoch **keinerlei Gewähr oder Haftung** für die Richtigkeit, Vollständigkeit oder Datensicherheit.
-    * **Datenschutz & DSGVO:** Es findet **keine** zentrale Speicherung von Daten der Lernenden auf externen Servern statt. Alle eingegebenen Daten sowie gespeicherte Klassen werden ausschließlich im Browser gesichert. 
-    * **Haftung:** Dieses Tool ist eine reine Arbeitshilfe zur Erleichterung der Gruppeneinteilung. Die Nutzung erfolgt vollständig auf eigene Verantwortung.
+
+    ### 🔒 Datenschutz & Datenspeicherung
+    * **Keine dauerhafte Speicherung:** Alle eingegebenen Namen, Anwesenheiten und Leistungsstufen werden ausschließlich temporär im Arbeitsspeicher (Session State) deines aktuellen Browser-Tabs verarbeitet. 
+    * **Keine Cloud-Speicherung:** Es werden keine personenbezogenen Daten (wie Schülernamen) in einer Datenbank gespeichert oder an Dritte übertragen. Sobald du den Browser-Tab schließt, werden die Daten vollständig gelöscht.
+
+    ---
+
+    ### ⚠️ Haftungsausschluss & KI-Hinweis
+    * Dieses Tool wurde mithilfe einer Künstlichen Intelligenz (KI) erstellt. 
+    * Es wird keinerlei Verantwortung, Garantie oder Haftung für die fehlerfreie Funktion des Codes, die Richtigkeit der Gruppeneinteilungen oder den Datenschutz bei externem Hosting (z. B. auf Streamlit Community Cloud) übernommen. Die Nutzung erfolgt auf eigene Verantwortung.
     """)
 
+
+# =============================================================================
+# 6. ANSICHT 1: PRÄSENTATION
+# =============================================================================
 if st.session_state.show_presentation and "generierte_gruppen" in st.session_state:
+    
     col_back, col_reshuffle = st.columns(2)
     with col_back:
         st.button("⚙️ Zurück zur Bearbeitung", on_click=lambda: st.session_state.update({"show_presentation": False}), use_container_width=True)
@@ -472,7 +487,7 @@ if st.session_state.show_presentation and "generierte_gruppen" in st.session_sta
         if st.button("🎲 Neu zusammenwürfeln", type="primary", use_container_width=True):
             current_anwesende = get_anwesende_schueler()
             if current_anwesende:
-                kat = st.session_state.get("last_kategorie", "Zufällig")
+                kat = st.session_state.get("last_kategorie", "Kompetenzorientiert")
                 groesse = st.session_state.get("last_ziel_groesse", 3)
                 strat = st.session_state.get("last_rest_strategie", "Rest gleichmäßig auf bestehende Gruppen aufteilen")
                 num_t = st.session_state.get("last_num_themen", 3)
@@ -481,7 +496,7 @@ if st.session_state.show_presentation and "generierte_gruppen" in st.session_sta
                 )
                 st.rerun()
 
-    st.markdown("<h2 class='centered-text' style='margin-top: 1rem;'>🎯 Gruppeneinteilung</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='centered-text' style='margin-top: 1.5rem;'>🎯 Gruppeneinteilung</h2>", unsafe_allow_html=True)
     st.write("")
 
     res_data = st.session_state.generierte_gruppen
@@ -490,45 +505,24 @@ if st.session_state.show_presentation and "generierte_gruppen" in st.session_sta
         tab_exp, tab_base = st.tabs(["🧩 Expertengruppen", "👥 Stammgruppen"])
         
         with tab_exp:
-            cols = st.columns(min(3, len(res_data["experten"])))
-            for i, members in enumerate(res_data["experten"], start=1):
-                with cols[(i - 1) % len(cols)]:
-                    st.markdown(f"### Thema {i}")
-                    for m in members:
-                        st.write(f"• **{m}**")
-                    st.write("")
-                    
+            render_groups_grid(res_data["experten"], start_index=1, title_prefix="Thema")
+                
         with tab_base:
-            cols = st.columns(min(3, len(res_data["stammgruppen"])))
-            for i, members in enumerate(res_data["stammgruppen"], start=1):
-                with cols[(i - 1) % len(cols)]:
-                    st.markdown(f"### Stammgruppe {i}")
-                    for m in members:
-                        st.write(f"• **{m}**")
-                    st.write("")
+            render_groups_grid(res_data["stammgruppen"], start_index=1, title_prefix="Stammgruppe")
     else:
-        gruppen = res_data
-        num_cols = min(3, len(gruppen)) if len(gruppen) > 0 else 1
-        cols = st.columns(num_cols)
-        
-        for i, team in enumerate(gruppen, start=1):
-            col_idx = (i - 1) % num_cols
-            with cols[col_idx]:
-                with st.container():
-                    st.markdown(f"### Gruppe {i}")
-                    for m in team:
-                        st.write(f"• **{m}**")
-                    st.write("")
+        render_groups_grid(res_data, start_index=1, title_prefix="Gruppe")
 
-# -----------------------------------------------------------------------------
-# 5. LEHRERANSICHT
-# -----------------------------------------------------------------------------
+
+# =============================================================================
+# 7. ANSICHT 2: LEHRER / BEARBEITEN
+# =============================================================================
 else:
     st.markdown("<h3 class='centered-text'>📋 Lerngruppe & Anwesenheit</h3>", unsafe_allow_html=True)
     st.write("")
     
     top_col1, top_col2 = st.columns([2.5, 1.5], gap="small")
     with top_col1:
+        st.write("Excel-Liste hochladen:")
         uploaded_excel = st.file_uploader(
             "Excel-Liste hochladen", 
             type=["xlsx", "xls"], 
@@ -536,11 +530,9 @@ else:
             label_visibility="collapsed"
         )
     with top_col2:
-        st.markdown("<div style='height: 68px; display: flex; align-items: end;'>", unsafe_allow_html=True)
+        st.markdown("<div class='btn-new-list-container'>", unsafe_allow_html=True)
         if st.button("➕ Neue leere Liste erstellen", use_container_width=True):
             st.session_state.schueler_df = pd.DataFrame(columns=["Anwesend", "Vorname", "Nachname", "Leistungsstufe"])
-            st.session_state.current_loaded_class = None
-            st.session_state.expander_open = True
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -566,20 +558,21 @@ else:
 
             if new_rows:
                 st.session_state.schueler_df = pd.DataFrame(new_rows).reset_index(drop=True)
-                st.session_state.current_loaded_class = None
                 st.session_state.uploader_key += 1
                 st.rerun()
         except Exception as e:
             st.error(f"Fehler beim Einlesen: {e}")
 
-    col_widths = [1.0, 2.0, 2.0, 1.5, 1.5, 1.5, 0.6]
+    st.write("")
     st.write("")
 
+    col_widths = [1.0, 2.0, 2.0, 1.5, 1.5, 1.5, 0.6]
+
     header_cols = st.columns(col_widths)
-    header_cols[0].markdown("<p class='table-header' style='text-align: left; position: relative; top: 0px; color: #3b3b3b;'>Da?</p>", unsafe_allow_html=True)
-    header_cols[1].markdown("<p class='table-header' style='text-align: left; position: relative; top: -9px; color: #3b3b3b;'>Vorname</p>", unsafe_allow_html=True)
-    header_cols[2].markdown("<p class='table-header' style='text-align: left; position: relative; top: -9px; color: #3b3b3b;'>Nachname</p>", unsafe_allow_html=True)
-    header_cols[4].markdown("<p class='table-header' style='text-align: center; position: relative; top: 0px; color: #3b3b3b;'>Kompetenz</p>", unsafe_allow_html=True)
+    header_cols[0].markdown("<p class='table-header th-da'>Da?</p>", unsafe_allow_html=True)
+    header_cols[1].markdown("<p class='table-header th-vn'>Vorname</p>", unsafe_allow_html=True)
+    header_cols[2].markdown("<p class='table-header th-nn'>Nachname</p>", unsafe_allow_html=True)
+    header_cols[4].markdown("<p class='table-header th-komp'>Kompetenz</p>", unsafe_allow_html=True)
 
     if not st.session_state.schueler_df.empty:
         for idx, row in st.session_state.schueler_df.iterrows():
@@ -590,7 +583,7 @@ else:
             aktuelle_stufe = str(row["Leistungsstufe"]).lower()
 
             with c1:
-                cb_key = f"anw_{idx}_{v_name_str}"
+                cb_key = f"anw_{idx}_{v_name_str}_{n_name_str}"
                 st.checkbox(
                     "", 
                     value=bool(row["Anwesend"]), 
@@ -601,15 +594,15 @@ else:
                 )
             
             with c2:
-                st.markdown(f"**{v_name_str}**")
+                st.markdown(f"<div class='row-vn'><b>{v_name_str}</b></div>", unsafe_allow_html=True)
                 
             with c3:
-                st.markdown(f"{n_name_str}")
+                st.markdown(f"<div class='row-nn'>{n_name_str}</div>", unsafe_allow_html=True)
 
             with c4:
                 st.button(
                     "schwach", 
-                    key=f"btn_schwach_{idx}_{v_name_str}", 
+                    key=f"btn_schwach_{idx}_{v_name_str}_{n_name_str}", 
                     type="primary" if aktuelle_stufe == "schwach" else "tertiary",
                     on_click=set_stufe,
                     args=(idx, "schwach")
@@ -618,7 +611,7 @@ else:
             with c5:
                 st.button(
                     "mittel", 
-                    key=f"btn_mittel_{idx}_{v_name_str}", 
+                    key=f"btn_mittel_{idx}_{v_name_str}_{n_name_str}", 
                     type="primary" if aktuelle_stufe == "mittel" else "tertiary",
                     on_click=set_stufe,
                     args=(idx, "mittel")
@@ -627,7 +620,7 @@ else:
             with c6:
                 st.button(
                     "stark", 
-                    key=f"btn_stark_{idx}_{v_name_str}", 
+                    key=f"btn_stark_{idx}_{v_name_str}_{n_name_str}", 
                     type="primary" if aktuelle_stufe == "stark" else "tertiary",
                     on_click=set_stufe,
                     args=(idx, "stark")
@@ -636,12 +629,31 @@ else:
             with c7:
                 st.button(
                     "🗑️", 
-                    key=f"btn_del_{idx}_{v_name_str}",
+                    key=f"btn_del_{idx}_{v_name_str}_{n_name_str}",
                     on_click=delete_student,
                     args=(idx,)
                 )
     else:
         st.info("Die Liste ist aktuell leer. Füge unten einfach erste Lernende hinzu!")
+
+    anwesende_schueler = get_anwesende_schueler()
+    
+    if not st.session_state.schueler_df.empty:
+        anwesende_df_stats = st.session_state.schueler_df[st.session_state.schueler_df["Anwesend"] == True]
+        anzahl_schwach = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "schwach"])
+        anzahl_mittel = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "mittel"])
+        anzahl_stark = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "stark"])
+    else:
+        anzahl_schwach = anzahl_mittel = anzahl_stark = 0
+
+    s1, s2, s3, s4, s5, s6, s7 = st.columns(col_widths)
+    s1.markdown(f"<div class='sum-number'><b>{len(anwesende_schueler)}</b>/{len(st.session_state.schueler_df)}</div>", unsafe_allow_html=True)
+    s2.markdown("<div class='sum-label'><b>Gesamt</b></div>", unsafe_allow_html=True)
+    s3.markdown("")
+    s4.markdown(f"<div class='summary-pill sum-badge'>🔴 {anzahl_schwach}</div>", unsafe_allow_html=True)
+    s5.markdown(f"<div class='summary-pill sum-badge'>🟡 {anzahl_mittel}</div>", unsafe_allow_html=True)
+    s6.markdown(f"<div class='summary-pill sum-badge'>🟢 {anzahl_stark}</div>", unsafe_allow_html=True)
+    s7.markdown("")
 
     with st.form("add_student_form", clear_on_submit=True):
         st.markdown("<p style='font-size: 0.85rem; font-weight: 600; color: #718096; margin-bottom: 8px;'>➕ Lernende/n hinzufügen</p>", unsafe_allow_html=True)
@@ -656,83 +668,13 @@ else:
                 add_student(new_vname, new_nname, new_stufe)
                 st.rerun()
 
-    anwesende_schueler = get_anwesende_schueler()
-    
-    if not st.session_state.schueler_df.empty:
-        anwesende_df_stats = st.session_state.schueler_df[st.session_state.schueler_df["Anwesend"] == True]
-        anzahl_schwach = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "schwach"])
-        anzahl_mittel = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "mittel"])
-        anzahl_stark = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "stark"])
-    else:
-        anzahl_schwach = anzahl_mittel = anzahl_stark = 0
-
-    st.markdown("<hr style='margin: 12px 0 8px 0; border: none; border-top: 1px solid #e6e6e6;'>", unsafe_allow_html=True)
-    
-    s1, s2, s3, s4, s5, s6, s7 = st.columns(col_widths)
-    s1.markdown(f"<div class='centered-text' style='padding-top: 0px;'><b>{len(anwesende_schueler)}</b>/{len(st.session_state.schueler_df)}</div>", unsafe_allow_html=True)
-    s2.markdown("<b>Gesamt</b>", unsafe_allow_html=True)
-    s3.markdown("")
-    s4.markdown(f"<div class='summary-pill'>🔴 {anzahl_schwach}</div>", unsafe_allow_html=True)
-    s5.markdown(f"<div class='summary-pill'>🟡 {anzahl_mittel}</div>", unsafe_allow_html=True)
-    s6.markdown(f"<div class='summary-pill'>🟢 {anzahl_stark}</div>", unsafe_allow_html=True)
-    s7.markdown("")
-
-    saved_classes = get_all_saved_classes()
-    class_names = list(saved_classes.keys())
-
-    expander_title = "💾 Klasse speichern & laden"
-    if st.session_state.current_loaded_class:
-        expander_title += f" (Geladen: {st.session_state.current_loaded_class})"
-
-    with st.expander(expander_title, expanded=st.session_state.get("expander_open", True)):
-        col_left, col_right = st.columns(2, gap="large")
-        
-        with col_left:
-            st.markdown("#### Klasse speichern / aktualisieren")
-            if st.session_state.current_loaded_class:
-                if st.button(f"✏️ '{st.session_state.current_loaded_class}' aktualisieren", type="primary", use_container_width=True):
-                    saved_classes[st.session_state.current_loaded_class] = st.session_state.schueler_df.to_dict(orient="records")
-                    st.session_state.saved_classes_cache = saved_classes
-                    cookie_manager.set(STORAGE_KEY, json.dumps(saved_classes), max_age=31536000)
-                    st.rerun()
-
-            k_name_input = st.text_input("Klassenname eingeben:", placeholder="z. B. Klasse 8a", key="k_name_input")
-            if st.button("💾 Als neue Klasse speichern", key="btn_save_class_act", use_container_width=True):
-                clean_name = k_name_input.strip()
-                if clean_name:
-                    saved_classes[clean_name] = st.session_state.schueler_df.to_dict(orient="records")
-                    st.session_state.saved_classes_cache = saved_classes
-                    st.session_state.current_loaded_class = clean_name
-                    cookie_manager.set(STORAGE_KEY, json.dumps(saved_classes), max_age=31536000)
-                    st.rerun()
-
-        with col_right:
-            st.markdown("#### Gespeicherte Klassen")
-            if class_names:
-                selected_class = st.selectbox("Klasse auswählen:", options=class_names, key="selected_class_dropdown")
-                b_load, b_del = st.columns(2, gap="small")
-                with b_load:
-                    if st.button("📥 Laden", key="btn_load_class_act", use_container_width=True):
-                        st.session_state.schueler_df = pd.DataFrame(saved_classes[selected_class]).reset_index(drop=True)
-                        st.session_state.current_loaded_class = selected_class
-                        st.rerun()
-                with b_del:
-                    if st.button("🗑️ Löschen", key="btn_del_class_act", use_container_width=True):
-                        if selected_class in saved_classes:
-                            del saved_classes[selected_class]
-                            st.session_state.current_loaded_class = None
-                            st.session_state.saved_classes_cache = saved_classes
-                            cookie_manager.set(STORAGE_KEY, json.dumps(saved_classes), max_age=31536000)
-                            st.rerun()
-
-    st.divider()
-
     st.markdown("<h3 class='centered-text'>⚙️ Zuteilungsmodus & Generierung</h3>", unsafe_allow_html=True)
     st.write("")
 
     kategorie = st.radio(
         "Art der Gruppeneinteilung",
-        options=["Zufällig", "Kompetenzorientiert", "Gruppenpuzzle"],
+        options=["Kompetenzorientiert", "Zufällig", "Gruppenpuzzle"],
+        index=0,
         horizontal=True
     )
 
@@ -767,7 +709,6 @@ else:
         )
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.write("")
     generate_btn = st.button("🎲 Gruppen generieren & Präsentieren", type="primary", use_container_width=True)
 
     if generate_btn:
