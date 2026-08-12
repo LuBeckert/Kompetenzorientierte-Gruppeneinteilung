@@ -8,7 +8,7 @@ import extra_streamlit_components as stx
 # -----------------------------------------------------------------------------
 # 1. KONFIGURATION & CSS
 # -----------------------------------------------------------------------------
-st.set_page_config(page_title="Kompeteo - Gruppen", page_icon="👥", layout="wide")
+st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="wide")
 
 st.markdown("""
     <style>
@@ -24,11 +24,16 @@ st.markdown("""
         .centered-text { text-align: center !important; }
 
         /* --------------------------------------------------------------------- */
-        /* DROPDOWN-MENÜS: Vertikale Position anpassen                           */
+        /* DROPDOWN-MENÜS: Getrennte vertikale Positionen                       */
         /* --------------------------------------------------------------------- */
-        div[data-testid="stSelectbox"] {
+        .dropdown-links div[data-testid="stSelectbox"] {
             position: relative;
-            top: -10px; /* <--- HIER ANPASSEN: Ändere diesen Wert (z.B. -5px, -15px etc.) */
+            top: -10px;
+        }
+
+        .dropdown-rechts div[data-testid="stSelectbox"] {
+            position: relative;
+            top: -10px;
         }
 
         /* --------------------------------------------------------------------- */
@@ -224,22 +229,22 @@ DEFAULT_SCHUELER = [
     {"Anwesend": True, "Vorname": "Stark 3", "Nachname": "Stark 3", "Leistungsstufe": "stark"},
 ]
 
-COOKIE_NAME = "gruppen_klassen_liste"
+STORAGE_KEY = "gruppen_klassen_liste_cookie"
 
-all_cookies = cookie_manager.get_all()
-if all_cookies is None:
-    st.info("🔄 Initialisiere Speicherfunktion...")
-    st.stop()
+# Beim ersten Laden kurz auf den CookieManager warten
+raw_val = cookie_manager.get(STORAGE_KEY)
+if raw_val is None and "cookie_initialized" not in st.session_state:
+    st.session_state.cookie_initialized = True
+    st.rerun()
 
 def get_all_saved_classes():
     if "saved_classes_cache" in st.session_state:
         return st.session_state.saved_classes_cache
 
-    raw_val = all_cookies.get(COOKIE_NAME)
-    if raw_val:
+    val = cookie_manager.get(STORAGE_KEY)
+    if val:
         try:
-            data = json.loads(raw_val) if isinstance(raw_val, str) else raw_val
-            data = json.loads(data) if isinstance(data, str) else data
+            data = json.loads(val) if isinstance(val, str) else val
             res = data if isinstance(data, dict) else {}
             st.session_state.saved_classes_cache = res
             return res
@@ -327,9 +332,6 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
     if n == 0:
         return []
     
-    # -------------------------------------------------------------
-    # GRUPPENPUZZLE LOGIK
-    # -------------------------------------------------------------
     if kategorie == "Gruppenpuzzle":
         random.shuffle(s_list)
         expert_groups = {i: [] for i in range(1, num_themen + 1)}
@@ -338,13 +340,11 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
             expert_groups[topic_id].append(s)
         
         num_full_groups = n // num_themen
-        
         expert_display = [[f"{s['AnzeigeName']}" for s in members] for members in expert_groups.values()]
         
         stammgruppen = []
         rest_schueler = []
         
-        # 1. Vollständige Stammgruppen bilden
         for i in range(num_full_groups):
             group = []
             for topic_id in range(1, num_themen + 1):
@@ -352,12 +352,10 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
                 group.append(f"{m['AnzeigeName']} (T{topic_id})")
             stammgruppen.append(group)
             
-        # 2. Übrige Experten sammeln
         for topic_id in range(1, num_themen + 1):
             for m in expert_groups[topic_id]:
                 rest_schueler.append(f"{m['AnzeigeName']} (T{topic_id})")
                 
-        # 3. Rest-Strategie anwenden
         if rest_strategie == "Rest als kleinere Gruppe zusammenfassen" and rest_schueler:
             stammgruppen.append(rest_schueler)
         else:
@@ -374,9 +372,6 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
             "stammgruppen": stammgruppen
         }
 
-    # -------------------------------------------------------------
-    # STANDARDFUNKTIONEN (Zufällig & Kompetenzorientiert)
-    # -------------------------------------------------------------
     gruppen = []
     
     if kategorie == "Zufällig":
@@ -450,23 +445,22 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
 # -----------------------------------------------------------------------------
 # 4. PRÄSENTATIONSMODUS
 # -----------------------------------------------------------------------------
-st.markdown("<h1 class='centered-text'>👥 Kompeteo - der intelligente Gruppen-Generator</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='centered-text'>👥 Der intelligente Gruppen-Generator</h1>", unsafe_allow_html=True)
 
 with st.expander("ℹ️ Anleitung & Rechtliche Hinweise"):
     st.markdown("""
     ### 🛠️ Kurzanleitung
-    1. **Liste der Lernenden erstellen:** Lade eine Excel-Tabelle (.xlsx/.xls) hoch. Das Tool erkennt dabei eigenständig die passenden Spalten für Vor- und Nachnamen (sowie weitere Varianten), um die Liste automatisch zu erstellen. Alternativ kannst du Lernende auch manuell über das Formular am Tabellenende hinzufügen.
+    1. **Liste der Lernenden erstellen:** Lade eine Excel-Tabelle (.xlsx/.xls) hoch. Das Tool erkennt dabei eigenständig die passenden Spalten für Vor- und Nachnamen, um die Liste automatisch zu erstellen. Alternativ kannst du Lernende auch manuell über das Formular am Tabellenende hinzufügen.
     2. **Anwesenheit & Kompetenz:** 
         - Markiere anwesende Lernende über die Checkbox in der Spalte **„Da?“**.
         - Weise über die Buttons **schwach**, **mittel** oder **stark** das jeweilige Kompetenzniveau zu.
-    3. **Klasse speichern (optional):** Klappe den Bereich *„Klasse speichern & laden“* auf, um deine Listen lokal im Browser zu sichern und später wieder abzurufen.
+    3. **Klasse speichern (optional):** Klappe den Bereich *„Klasse speichern & laden“* auf, um deine Listen abzuspeichern und später wieder abzurufen.
     4. **Gruppen generieren:** Wähle unten den Zuteilungsmodus und klicke auf **„Gruppen generieren & Präsentieren“**.
 
     ---
     ### ⚖️ Disclaimer & Datenschutz
-    * **Entwicklung & Transparenz:** Dieses Tool wurde von mir (als Nicht-IT-Experten) mithilfe von Künstlicher Intelligenz (KI) entwickelt. Die KI hat mir versichert, dass die Datenschutzstandards wie beschrieben eingehalten werden; ich selbst übernehme jedoch **keinerlei Gewähr oder Haftung** für die Richtigkeit, Vollständigkeit oder Datensicherheit.
-    * **Datenschutz & DSGVO:** Es findet **keine** zentrale Speicherung von Daten der Lernenden auf externen Servern statt. Alle eingegebenen Daten (egal ob per Excel-Upload oder manuell eingepflegt) sowie gespeicherte Klassen werden **ausschließlich lokal im Browser** des genutzten Endgeräts (über den Arbeitsspeicher und Cookies) gesichert. 
-    * **Datensicherheit:** Da die Sicherung lokal über den Browser erfolgt, können Daten bei gelöschten Cookies oder Browser-Caches verloren gehen. Bitte achte darauf, dein Endgerät bei der Nutzung vor unbefugtem Zugriff Dritter zu schützen.
+    * **Entwicklung & Transparenz:** Dieses Tool wurde von mir (als Nicht-IT-Experten) mithilfe von Künstlicher Intelligenz (KI) entwickelt. Die KI hat mir versichert, dass die Datenschutzstandards eingehalten werden; ich selbst übernehme jedoch **keinerlei Gewähr oder Haftung** für die Richtigkeit, Vollständigkeit oder Datensicherheit.
+    * **Datenschutz & DSGVO:** Es findet **keine** zentrale Speicherung von Daten der Lernenden auf externen Servern statt. Alle eingegebenen Daten sowie gespeicherte Klassen werden ausschließlich im Browser gesichert. 
     * **Haftung:** Dieses Tool ist eine reine Arbeitshilfe zur Erleichterung der Gruppeneinteilung. Die Nutzung erfolgt vollständig auf eigene Verantwortung.
     """)
 
@@ -699,7 +693,7 @@ else:
                 if st.button(f"✏️ '{st.session_state.current_loaded_class}' aktualisieren", type="primary", use_container_width=True):
                     saved_classes[st.session_state.current_loaded_class] = st.session_state.schueler_df.to_dict(orient="records")
                     st.session_state.saved_classes_cache = saved_classes
-                    cookie_manager.set(COOKIE_NAME, json.dumps(saved_classes), key="update_class_cookie")
+                    cookie_manager.set(STORAGE_KEY, json.dumps(saved_classes), max_age=31536000)
                     st.rerun()
 
             k_name_input = st.text_input("Klassenname eingeben:", placeholder="z. B. Klasse 8a", key="k_name_input")
@@ -709,7 +703,7 @@ else:
                     saved_classes[clean_name] = st.session_state.schueler_df.to_dict(orient="records")
                     st.session_state.saved_classes_cache = saved_classes
                     st.session_state.current_loaded_class = clean_name
-                    cookie_manager.set(COOKIE_NAME, json.dumps(saved_classes), key="save_classes_cookie")
+                    cookie_manager.set(STORAGE_KEY, json.dumps(saved_classes), max_age=31536000)
                     st.rerun()
 
         with col_right:
@@ -728,7 +722,7 @@ else:
                             del saved_classes[selected_class]
                             st.session_state.current_loaded_class = None
                             st.session_state.saved_classes_cache = saved_classes
-                            cookie_manager.set(COOKIE_NAME, json.dumps(saved_classes), key="del_class_cookie")
+                            cookie_manager.set(STORAGE_KEY, json.dumps(saved_classes), max_age=31536000)
                             st.rerun()
 
     st.divider()
@@ -745,6 +739,7 @@ else:
     col1, col2 = st.columns(2)
     
     with col1:
+        st.markdown('<div class="dropdown-links">', unsafe_allow_html=True)
         if kategorie == "Gruppenpuzzle":
             ziel_groesse = 3
             num_themen = st.selectbox(
@@ -759,8 +754,10 @@ else:
                 options=[2, 3, 4, 5],
                 format_func=lambda x: f"{x}er-Gruppen"
             )
+        st.markdown('</div>', unsafe_allow_html=True)
         
     with col2:
+        st.markdown('<div class="dropdown-rechts">', unsafe_allow_html=True)
         rest_strategie = st.selectbox(
             "Umgang mit unvollständigen Resten",
             options=[
@@ -768,6 +765,7 @@ else:
                 "Rest als kleinere Gruppe zusammenfassen"
             ]
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.write("")
     generate_btn = st.button("🎲 Gruppen generieren & Präsentieren", type="primary", use_container_width=True)
