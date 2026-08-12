@@ -8,17 +8,15 @@ import random
 st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="centered")
 
 # =============================================================================
-# 2. DYNAMISCHES CSS (OPTIMIERT FÜR MOBILE & DESKTOP)
+# 2. DYNAMISCHES CSS (INKL. GEZIELTER GRÜNER FÄRBUNG FÜR "NEU WÜRFELN")
 # =============================================================================
 st.markdown("""
     <style>
         .main .block-container {
             max-width: 850px !important;
             margin: 0 auto !important;
-            padding-top: 1rem !important;
+            padding-top: 1.5rem !important;
             padding-bottom: 3rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
         }
         .centered-text { text-align: center !important; }
 
@@ -38,24 +36,18 @@ st.markdown("""
         .th-da   { position: relative; top: -2px; text-align: left; }
         .th-vn   { position: relative; top: 0px; text-align: left; }
         .th-nn   { position: relative; top: 2px; text-align: left; }
-        .th-komp { position: relative; top: 0px; text-align: center; }
+        .th-komp { position: relative; top: 0px; left: -20px; text-align: center; }
 
         .row-vn  { position: relative; top: 5px; margin: 0 !important; padding: 0 !important; }
         .row-nn  { position: relative; top: 5px; margin: 0 !important; padding: 0 !important; }
 
         .sum-number { position: relative; top: 0px; text-align: center; }
         .sum-label  { position: relative; top: 0px; }
-        .sum-badge  { position: relative; top: 0px; }
+        .sum-badge  { position: relative; top: 0px; left: -15px; }
 
         .btn-new-list-container {
             position: relative;
-            top: 0px;
-        }
-
-        @media (min-width: 768px) {
-            .btn-new-list-container {
-                top: 28px;
-            }
+            top: 28px;
         }
 
         div[data-testid="stRadio"] > label,
@@ -68,83 +60,58 @@ st.markdown("""
 
         div[data-testid="stHorizontalBlock"] {
             align-items: center !important; 
-            flex-wrap: wrap !important;
         }
 
         div[data-testid="stColumn"] {
             display: flex !important;
             flex-direction: column !important;
             justify-content: center !important;
-            min-height: 36px !important;
-            padding: 0 2px !important;
+            min-height: 40px !important;
+            padding: 0 4px !important;
         }
 
-        /* Checkbox Spalte */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) div[data-testid="stCheckbox"] {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            height: 32px !important;
+            height: 36px !important;
             margin: 0 !important;
             padding: 0 !important;
         }
 
-        /* Vor- und Nachname Textanpassung für Mobile */
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) p,
         div[data-testid="stHorizontalBlock"] > div:nth-child(3) p {
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 1.1 !important;
-            font-size: 0.85rem !important;
+            line-height: 1 !important;
+            font-size: 0.95rem;
             color: #2d3748;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        @media (min-width: 640px) {
-            div[data-testid="stHorizontalBlock"] > div:nth-child(2) p,
-            div[data-testid="stHorizontalBlock"] > div:nth-child(3) p {
-                font-size: 0.95rem !important;
-            }
-        }
-
-        /* Buttons für Leistungsstufen & Löschen kompaktem Format auf Smartphones */
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) div[data-testid="stButton"],
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) div[data-testid="stButton"] {
+        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) div[data-testid="stButton"] {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            height: 32px !important;
+            height: 36px !important;
             margin: 0 !important;
             padding: 0 !important;
         }
 
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button,
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) button {
-            height: 28px !important;
-            min-height: 28px !important;
+        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button {
+            height: 32px !important;
+            min-height: 32px !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 0 2px !important;
+            padding: 0 4px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            border-radius: 4px !important;
+            border-radius: 6px !important;
             box-sizing: border-box !important;
             border: 1px solid #e2e8f0 !important;
             background-color: #f7fafc !important;
             color: #4a5568 !important;
-            font-size: 0.72rem !important;
-        }
-
-        @media (min-width: 640px) {
-            div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button,
-            div[data-testid="stHorizontalBlock"] > div:nth-child(7) button {
-                height: 32px !important;
-                min-height: 32px !important;
-                padding: 0 4px !important;
-                font-size: 0.85rem !important;
-            }
         }
 
         div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button:hover {
@@ -163,6 +130,27 @@ st.markdown("""
             font-weight: 700 !important;
         }
 
+        div[data-testid="stHorizontalBlock"] > div:nth-child(7) div[data-testid="stButton"] {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 36px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(7) button {
+            height: 32px !important;
+            min-height: 32px !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 6px !important;
+            border: 1px solid #e2e8f0 !important;
+            background-color: #f7fafc !important;
+        }
         div[data-testid="stHorizontalBlock"] > div:nth-child(7) button:hover {
             background-color: #fee2e2 !important;
             border-color: #f87171 !important;
@@ -171,17 +159,11 @@ st.markdown("""
         .table-header {
             font-weight: 700;
             color: #3b3b3b;
-            font-size: 0.8rem;
+            font-size: 0.88rem;
             margin: 0 !important;
             padding: 0 !important;
             line-height: 1.2 !important;
             width: 100%;
-        }
-
-        @media (min-width: 640px) {
-            .table-header {
-                font-size: 0.88rem;
-            }
         }
 
         .summary-pill {
@@ -190,10 +172,10 @@ st.markdown("""
             border-radius: 5px;
             padding: 0px;
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 600;
             width: 100%;
-            height: 26px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -202,22 +184,15 @@ st.markdown("""
         .dropdown-links div[data-testid="stSelectbox"],
         .dropdown-rechts div[data-testid="stSelectbox"] {
             position: relative;
-            top: 0px;
-        }
-
-        @media (min-width: 768px) {
-            .dropdown-links div[data-testid="stSelectbox"],
-            .dropdown-rechts div[data-testid="stSelectbox"] {
-                top: -10px;
-            }
+            top: -10px;
         }
 
         .group-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             text-align: center !important;
         }
@@ -225,14 +200,13 @@ st.markdown("""
         .group-card ul {
             list-style-type: none !important;
             padding: 0 !important;
-            margin: 6px 0 0 -22pt !important;
+            margin: 8px 0 0 -22pt !important;
             text-align: center !important;
         }
         
         .group-card li {
             text-align: center !important;
-            margin-bottom: 3px !important;
-            font-size: 0.9rem;
+            margin-bottom: 4px !important;
         }
 
         button[kind="primary"][data-testid="baseButton-primary"] {
@@ -454,7 +428,7 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
 
 
 # =============================================================================
-# RESPONSIVE GRID-DARSTELLUNG FÜR PRÄSENTATION
+# ZENTRIERTE GRID-DARSTELLUNG FÜR PRÄSENTATION
 # =============================================================================
 def render_groups_grid(groups_subset, start_index=1, title_prefix="Gruppe"):
     for i in range(0, len(groups_subset), 3):
@@ -476,7 +450,7 @@ def render_groups_grid(groups_subset, start_index=1, title_prefix="Gruppe"):
 # =============================================================================
 # 5. HEADER & INFO-BEREICH
 # =============================================================================
-st.markdown("<h1 class='centered-text' style='font-size: 1.6rem;'>👥 Kompetenzorientierte Gruppen</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='centered-text'>👥 Kompetenzorientierte Gruppen</h1>", unsafe_allow_html=True)
 
 with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
     st.markdown("""
@@ -543,7 +517,7 @@ if st.session_state.show_presentation and "generierte_gruppen" in st.session_sta
 # 7. ANSICHT 2: LEHRER / BEARBEITEN
 # =============================================================================
 else:
-    st.markdown("<h3 class='centered-text' style='font-size: 1.2rem;'>📋 Lerngruppe & Anwesenheit</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 class='centered-text'>📋 Lerngruppe & Anwesenheit</h3>", unsafe_allow_html=True)
     st.write("")
     
     top_col1, top_col2 = st.columns([2.5, 1.5], gap="small")
@@ -592,7 +566,7 @@ else:
     st.write("")
     st.write("")
 
-    col_widths = [0.8, 2.1, 2.1, 1.3, 1.3, 1.3, 0.6]
+    col_widths = [1.0, 2.0, 2.0, 1.5, 1.5, 1.5, 0.6]
 
     header_cols = st.columns(col_widths)
     header_cols[0].markdown("<p class='table-header th-da'>Da?</p>", unsafe_allow_html=True)
@@ -676,9 +650,9 @@ else:
     s1.markdown(f"<div class='sum-number'><b>{len(anwesende_schueler)}</b>/{len(st.session_state.schueler_df)}</div>", unsafe_allow_html=True)
     s2.markdown("<div class='sum-label'><b>Gesamt</b></div>", unsafe_allow_html=True)
     s3.markdown("")
-    s4.markdown(f"<div class='summary-pill'>🔴 {anzahl_schwach}</div>", unsafe_allow_html=True)
-    s5.markdown(f"<div class='summary-pill'>🟡 {anzahl_mittel}</div>", unsafe_allow_html=True)
-    s6.markdown(f"<div class='summary-pill'>🟢 {anzahl_stark}</div>", unsafe_allow_html=True)
+    s4.markdown(f"<div class='summary-pill sum-badge'>🔴 {anzahl_schwach}</div>", unsafe_allow_html=True)
+    s5.markdown(f"<div class='summary-pill sum-badge'>🟡 {anzahl_mittel}</div>", unsafe_allow_html=True)
+    s6.markdown(f"<div class='summary-pill sum-badge'>🟢 {anzahl_stark}</div>", unsafe_allow_html=True)
     s7.markdown("")
 
     with st.form("add_student_form", clear_on_submit=True):
@@ -694,7 +668,7 @@ else:
                 add_student(new_vname, new_nname, new_stufe)
                 st.rerun()
 
-    st.markdown("<h3 class='centered-text' style='font-size: 1.2rem;'>⚙️ Zuteilungsmodus & Generierung</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 class='centered-text'>⚙️ Zuteilungsmodus & Generierung</h3>", unsafe_allow_html=True)
     st.write("")
 
     kategorie = st.radio(
