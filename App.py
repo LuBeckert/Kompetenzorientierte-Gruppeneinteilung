@@ -2,44 +2,50 @@ import streamlit as st
 import pandas as pd
 import random
 
-# Verhindert die automatische mobile Skalierung (Viewport auf feste Desktop-Breite setzen)
-st.markdown(
-    """
-    <head>
-        <meta name="viewport" content="width=1200">
-    </head>
-""",
-    unsafe_allow_html=True,
-)
+# =============================================================================
+# 1. KONFIGURATION & UNBEUGSAMES DESKTOP-LAYOUT
+# =============================================================================
+st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="wide")
+
+# Absolutes Fixieren des Renders auf eine Mindestbreite von 1100px
 st.markdown(
     """
     <style>
-        /* Erzwingt eine Mindestbreite für die Hauptinhalte, damit nichts zusammenstaucht */
-        .main .block-container {
-            max-width: 1000px !important;
-            min-width: 1000px !important;
+        /* 1. Erzwinge globale Mindestbreite auf allen Root-Containern */
+        html, body, [data-testid="stAppViewContainer"], .main, .block-container {
+            min-width: 1100px !important;
         }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
 
-# =============================================================================
-# 1. KONFIGURATION
-# =============================================================================
-st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="centered")
-
-# =============================================================================
-# 2. DYNAMISCHES CSS (INKL. GEZIELTER GRÜNER FÄRBUNG FÜR "NEU WÜRFELN")
-# =============================================================================
-st.markdown("""
-    <style>
+        /* 2. Zentriere den Hauptinhalt und definiere feste Breite */
         .main .block-container {
-            max-width: 850px !important;
+            width: 1100px !important;
+            max-width: 1100px !important;
             margin: 0 auto !important;
             padding-top: 1.5rem !important;
             padding-bottom: 3rem !important;
         }
+
+        /* 3. Streamlit Flexbox-Grid kompromisslos nebeneinander zwingen */
+        div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            min-width: 100% !important;
+            align-items: center !important; 
+        }
+
+        /* 4. Einzelne Spalten dürfen nicht unter eine Minimalbreite schrumpfen */
+        div[data-testid="stColumn"] {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+
+        /* 5. Zeilenumbrüche innerhalb von Tabellenelementen/Texten komplett verbieten */
+        .table-header, .row-vn, .row-nn, div[data-testid="stHorizontalBlock"] p, .summary-pill {
+            white-space: nowrap !important;
+            word-break: keep-all !important;
+        }
+
         .centered-text { text-align: center !important; }
 
         div[data-testid="stVerticalBlock"] {
@@ -80,10 +86,6 @@ st.markdown("""
             font-size: 1rem !important;
         }
 
-        div[data-testid="stHorizontalBlock"] {
-            align-items: center !important; 
-        }
-
         div[data-testid="stColumn"] {
             display: flex !important;
             flex-direction: column !important;
@@ -108,7 +110,6 @@ st.markdown("""
             line-height: 1 !important;
             font-size: 0.95rem;
             color: #2d3748;
-            white-space: nowrap;
         }
 
         div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) div[data-testid="stButton"] {
@@ -240,10 +241,12 @@ st.markdown("""
             border-color: #1b5e20 !important;
         }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # =============================================================================
-# 3. INITIALISIERUNG & STATE (12 DIVERSE SCHÜLER INKL. DOPPELTER VORNAMEN)
+# 2. INITIALISIERUNG & STATE (12 DIVERSE SCHÜLER INKL. DOPPELTER VORNAMEN)
 # =============================================================================
 DEFAULT_SCHUELER = [
     {"Anwesend": True, "Vorname": "David", "Nachname": "Weber", "Leistungsstufe": "stark"},
@@ -271,7 +274,7 @@ if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
 # =============================================================================
-# 4. HELPER- & LOGIK-FUNKTIONEN
+# 3. HELPER- & LOGIK-FUNKTIONEN
 # =============================================================================
 def load_excel_flexible(file):
     raw_df = pd.read_excel(file, header=None)
@@ -470,7 +473,7 @@ def render_groups_grid(groups_subset, start_index=1, title_prefix="Gruppe"):
 
 
 # =============================================================================
-# 5. HEADER & INFO-BEREICH
+# 4. HEADER & INFO-BEREICH
 # =============================================================================
 st.markdown("<h1 class='centered-text'>👥 Kompetenzorientierte Gruppen</h1>", unsafe_allow_html=True)
 
@@ -498,7 +501,7 @@ with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
 
 
 # =============================================================================
-# 6. ANSICHT 1: PRÄSENTATION
+# 5. ANSICHT 1: PRÄSENTATION
 # =============================================================================
 if st.session_state.show_presentation and "generierte_gruppen" in st.session_state:
     
@@ -536,7 +539,7 @@ if st.session_state.show_presentation and "generierte_gruppen" in st.session_sta
 
 
 # =============================================================================
-# 7. ANSICHT 2: LEHRER / BEARBEITEN
+# 6. ANSICHT 2: LEHRER / BEARBEITEN
 # =============================================================================
 else:
     st.markdown("<h3 class='centered-text'>📋 Lerngruppe & Anwesenheit</h3>", unsafe_allow_html=True)
