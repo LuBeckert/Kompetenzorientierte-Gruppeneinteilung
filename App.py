@@ -2,6 +2,28 @@ import streamlit as st
 import pandas as pd
 import random
 
+# Verhindert die automatische mobile Skalierung (Viewport auf feste Desktop-Breite setzen)
+st.markdown(
+    """
+    <head>
+        <meta name="viewport" content="width=1200">
+    </head>
+""",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """
+    <style>
+        /* Erzwingt eine Mindestbreite für die Hauptinhalte, damit nichts zusammenstaucht */
+        .main .block-container {
+            max-width: 1000px !important;
+            min-width: 1000px !important;
+        }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
 # =============================================================================
 # 1. KONFIGURATION
 # =============================================================================
