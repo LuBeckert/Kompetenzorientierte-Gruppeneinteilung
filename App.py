@@ -402,6 +402,7 @@ with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
     ### 🛠️ Kurzanleitung
     1. **Liste der Lernenden erstellen:** 
        - Ziehe eine Excel-Tabelle (`.xlsx`/`.xls`) bequem per **Drag & Drop** in das Upload-Feld (oder erstelle eine leere Liste).
+       - Spaltenüberschriften (z. B. *Vorname*, *Nachname*, *Name* etc.) werden dabei **automatisch in allen gängigen Varianten erkannt**.
        - Trage fehlende Lernende bei Bedarf manuell unten nach.
     2. **Anwesenheit & Kompetenz:** 
        - Markiere anwesende Lernende in der Spalte **„Da?“**.
