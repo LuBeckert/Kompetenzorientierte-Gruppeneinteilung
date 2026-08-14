@@ -3,251 +3,148 @@ import pandas as pd
 import random
 
 # =============================================================================
-# 1. KONFIGURATION & STRIKTES HORIZONTAL-SCROLLING (WEBKIT-FIX)
+# 1. KONFIGURATION & RESPONSIVES, ZENTRIERTES LAYOUT
 # =============================================================================
-st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="wide")
+st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="centered")
 
 st.markdown(
     """
     <style>
-        /* 1. Sämtliche Streamlit-Standard-Container für Scrollbars freischalten */
-        html, body, 
-        [data-testid="stAppViewContainer"], 
-        [data-testid="stHeader"],
-        .main, 
-        section.main,
-        div[data-testid="stAppViewBlockContainer"] {
-            overflow-x: auto !important;
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch !important; /* Wichtig für flüssiges Scrollen auf iOS/iPhone */
+        /* 1. Gesamte Seite gegen horizontales Verrutschen sperren */
+        html, body, .main {
+            overflow-x: hidden !important;
         }
 
-        /* 2. Den Inhalts-Container starr auf 1100px festlegen */
+        /* Hauptcontainer strikt zentrieren & auf 580px begrenzen */
         .main .block-container {
-            width: 1100px !important;
-            min-width: 1100px !important;
-            max-width: 1100px !important;
-            margin: 0 auto !important;
+            max-width: 580px !important;
+            width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
             padding-top: 1.5rem !important;
             padding-bottom: 3rem !important;
-            display: block !important;
-        }
-
-        /* 3. Flexbox-Grid kompromisslos nebeneinander zwingen */
-        div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            width: 1100px !important;
-            min-width: 1100px !important;
-            align-items: center !important; 
-        }
-
-        /* 4. Einzelne Spalten innerhalb der 1100px flexibel halten */
-        div[data-testid="stColumn"] {
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-        }
-
-        /* 5. Zeilenumbrüche innerhalb von Texten verbieten */
-        .table-header, .row-vn, .row-nn, div[data-testid="stHorizontalBlock"] p, .summary-pill {
-            white-space: nowrap !important;
-            word-break: keep-all !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            box-sizing: border-box !important;
         }
 
         .centered-text { text-align: center !important; }
 
+        /* 2. Vertikale Abstände & Formulare/Buttons vollbreit halten */
         div[data-testid="stVerticalBlock"] {
-            gap: 0.3rem !important;
+            gap: 0.5rem !important;
+        }
+
+        div[data-testid="stForm"], 
+        div[data-testid="stFileUploader"],
+        div[data-testid="stSelectbox"],
+        div[data-testid="stNumberInput"],
+        div[data-testid="stRadio"],
+        .element-container button {
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         div[data-testid="stForm"] {
-            margin-top: 12px !important;
-            margin-bottom: 12px !important;
+            margin-top: 10px !important;
+            margin-bottom: 10px !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
-            padding: 12px !important;
+            padding: 10px !important;
             background-color: #ffffff !important;
         }
 
-        .th-da   { position: relative; top: -2px; text-align: left; }
-        .th-vn   { position: relative; top: 0px; text-align: left; }
-        .th-nn   { position: relative; top: 2px; text-align: left; }
-        .th-komp { position: relative; top: 0px; left: -20px; text-align: center; }
-
-        .row-vn  { position: relative; top: 5px; margin: 0 !important; padding: 0 !important; }
-        .row-nn  { position: relative; top: 5px; margin: 0 !important; padding: 0 !important; }
-
-        .sum-number { position: relative; top: 0px; text-align: center; }
-        .sum-label  { position: relative; top: 0px; }
-        .sum-badge  { position: relative; top: 0px; left: -15px; }
-
-        .btn-new-list-container {
-            position: relative;
-            top: 28px;
+        /* 3. TABELLEN-CONTAINER: Isolierter horizontaler Scrollbereich & ausreichend Abstand nach unten gegen Abschneiden */
+        div[data-testid="stVerticalBlock"]:has(> div > div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(7)),
+        div[data-testid="stVerticalBlock"]:has(> div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(7)) {
+            overflow-x: auto !important;
+            max-width: 100% !important;
+            padding-bottom: 20px !important;
         }
 
-        div[data-testid="stRadio"] > label,
-        div[data-testid="stRadio"] label p,
-        div[data-testid="stRadio"] span {
-            font-weight: 700 !important;
-            color: #2d3748 !important;
-            font-size: 1rem !important;
-        }
-
-        div[data-testid="stColumn"] {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            min-height: 40px !important;
-            padding: 0 4px !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] > div:nth-child(1) div[data-testid="stCheckbox"] {
-            display: flex !important;
+        /* 4. TABELLEN-ZEILEN */
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) {
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
             align-items: center !important;
-            justify-content: center !important;
-            height: 36px !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            gap: 0.2rem !important;
+            min-width: 500px !important;
         }
 
-        div[data-testid="stHorizontalBlock"] > div:nth-child(2) p,
-        div[data-testid="stHorizontalBlock"] > div:nth-child(3) p {
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1 !important;
-            font-size: 0.95rem;
-            color: #2d3748;
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"] {
+            min-width: 0 !important;
         }
 
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) div[data-testid="stButton"] {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            height: 36px !important;
-            margin: 0 !important;
-            padding: 0 !important;
+        /* Spaltenbreiten Tabelle */
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"]:nth-child(1) {
+            flex: 0 0 36px !important; max-width: 36px !important; min-width: 36px !important; width: 36px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"]:nth-child(2) { flex: 1.8 1 0px !important; }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"]:nth-child(3) { flex: 1.8 1 0px !important; }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"]:nth-child(4),
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"]:nth-child(5),
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"]:nth-child(6) { flex: 1.0 1 0px !important; }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) > div[data-testid="stColumn"]:nth-child(7) {
+            flex: 0 0 32px !important; max-width: 32px !important; min-width: 32px !important; width: 32px !important;
         }
 
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button {
-            height: 32px !important;
-            min-height: 32px !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 4px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            border-radius: 6px !important;
-            box-sizing: border-box !important;
-            border: 1px solid #e2e8f0 !important;
-            background-color: #f7fafc !important;
-            color: #4a5568 !important;
+        /* Header & Typo */
+        .table-header { 
+            font-weight: 700; 
+            color: #3b3b3b; 
+            font-size: 0.8rem; 
+            margin: 0 0 10px 0 !important; 
+            padding: 0 !important; 
+            line-height: 1.2 !important; 
+            width: 100%; 
+        }
+        .th-da   { text-align: center; }
+        .th-vn   { text-align: left; }
+        .th-nn   { text-align: left; }
+        .th-komp { text-align: center; white-space: nowrap !important; word-break: normal !important; }
+
+        .row-vn  { font-weight: 600; font-size: 0.85rem; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .row-nn  { font-size: 0.85rem; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Buttons & Checkboxen in Tabelle */
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) div[data-testid="stCheckbox"] {
+            display: flex !important; align-items: center !important; justify-content: center !important; height: 28px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) button {
+            height: 28px !important; min-height: 28px !important; width: 100% !important; margin: 10px 0 0 0 !important; padding: 0 1px !important;
+            font-size: 0.72rem !important; border-radius: 5px !important; border: 1px solid #e2e8f0 !important; background-color: #f7fafc !important; color: #4a5568 !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) button[kind="primary"],
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) button[data-testid*="primary"] {
+            border: 1px solid #ff4b4b !important; background-color: #ff4b4b !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) button[kind="primary"] p,
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(7)) button[data-testid*="primary"] p {
+            color: #ffffff !important; font-weight: 700 !important;
         }
 
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button:hover {
-            background-color: #edf2f7 !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button[kind="primary"],
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button[data-testid*="primary"] {
-            border: 1px solid #ff4b4b !important;
-            background-color: #ff4b4b !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button[kind="primary"] p,
-        div[data-testid="stHorizontalBlock"] > div:nth-child(n+4):nth-child(-n+6) button[data-testid*="primary"] p {
-            color: #ffffff !important;
-            font-weight: 700 !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) div[data-testid="stButton"] {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            height: 36px !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) button {
-            height: 32px !important;
-            min-height: 32px !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            border-radius: 6px !important;
-            border: 1px solid #e2e8f0 !important;
-            background-color: #f7fafc !important;
-        }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) button:hover {
-            background-color: #fee2e2 !important;
-            border-color: #f87171 !important;
-        }
-
-        .table-header {
-            font-weight: 700;
-            color: #3b3b3b;
-            font-size: 0.88rem;
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1.2 !important;
-            width: 100%;
-        }
-
+        /* Zusammenfassung Pillen */
         .summary-pill {
-            background-color: #f8f9fa;
-            color: #4a5568;
-            border-radius: 5px;
-            padding: 0px;
-            text-align: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            width: 100%;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: #f8f9fa; color: #4a5568; border-radius: 5px; padding: 0px; text-align: center;
+            font-size: 0.78rem; font-weight: 600; width: 100%; height: 28px; display: flex; align-items: center; justify-content: center;
+            margin-top: 4px;
         }
+        .sum-number { text-align: center; font-size: 0.82rem; margin-top: 4px; }
+        .sum-label  { font-size: 0.82rem; margin-top: 4px; }
 
-        .dropdown-links div[data-testid="stSelectbox"],
-        .dropdown-rechts div[data-testid="stSelectbox"] {
-            position: relative;
-            top: -10px;
-        }
-
+        /* Gruppen-Karten */
         .group-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            text-align: center !important;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center !important;
         }
-        
-        .group-card ul {
-            list-style-type: none !important;
-            padding: 0 !important;
-            margin: 8px 0 0 -22pt !important;
-            text-align: center !important;
-        }
-        
-        .group-card li {
-            text-align: center !important;
-            margin-bottom: 4px !important;
-        }
+        .group-card ul { list-style-type: none !important; padding: 0 !important; margin: 6px 0 0 0 !important; text-align: center !important; }
+        .group-card li { text-align: center !important; margin-bottom: 3px !important; font-size: 0.9rem; }
 
         button[kind="primary"][data-testid="baseButton-primary"] {
-            background-color: #2e7d32 !important;
-            border-color: #2e7d32 !important;
+            background-color: #2e7d32 !important; border-color: #2e7d32 !important;
         }
         button[kind="primary"][data-testid="baseButton-primary"]:hover {
-            background-color: #1b5e20 !important;
-            border-color: #1b5e20 !important;
+            background-color: #1b5e20 !important; border-color: #1b5e20 !important;
         }
     </style>
 """,
@@ -281,6 +178,17 @@ if "show_presentation" not in st.session_state:
     st.session_state.show_presentation = False
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
+
+if "size_mode" not in st.session_state:
+    st.session_state.size_mode = "Feste Gruppengröße"
+if "num_per_group" not in st.session_state:
+    st.session_state.num_per_group = 3
+if "num_total_groups" not in st.session_state:
+    st.session_state.num_total_groups = 3
+if "selected_themen" not in st.session_state:
+    st.session_state.selected_themen = 3
+if "selected_rest" not in st.session_state:
+    st.session_state.selected_rest = "Rest gleichmäßig auf bestehende Gruppen aufteilen"
 
 # =============================================================================
 # 3. HELPER- & LOGIK-FUNKTIONEN
@@ -344,7 +252,7 @@ def add_student(vorname, nachname, stufe):
     }])
     st.session_state.schueler_df = pd.concat([st.session_state.schueler_df, new_row], ignore_index=True)
 
-def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_strategie, num_themen=3):
+def generiere_gruppen_dynamisch(schueler_liste, kategorie, size_mode, num_per_group, num_total_groups, rest_strategie, num_themen=3):
     s_list = schueler_liste.copy()
     n = len(s_list)
     if n == 0:
@@ -374,7 +282,7 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
             for m in expert_groups[topic_id]:
                 rest_schueler.append(f"{m['AnzeigeName']} (T{topic_id})")
                 
-        if rest_strategie == "Rest als kleinere Gruppe zusammenfassen" and rest_schueler:
+        if "kleinere Gruppe" in rest_strategie and rest_schueler:
             stammgruppen.append(rest_schueler)
         else:
             if stammgruppen:
@@ -390,31 +298,15 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
             "stammgruppen": stammgruppen
         }
 
-    gruppen = []
-    
-    if kategorie == "Zufällig":
-        random.shuffle(s_list)
-        if rest_strategie == "Rest als kleinere Gruppe zusammenfassen":
-            for i in range(0, n, ziel_groesse):
-                chunk = s_list[i:i + ziel_groesse]
-                gruppen.append(chunk)
-        else:
-            num_groups = max(1, round(n / ziel_groesse))
-            gruppen = [[] for _ in range(num_groups)]
-            for idx, student in enumerate(s_list):
-                group_idx = idx % num_groups
-                gruppen[group_idx].append(student)
-                
-    elif kategorie == "Kompetenzorientiert":
-        stark = [s for s in s_list if s.get("Leistungsstufe") == "stark"]
-        mittel = [s for s in s_list if s.get("Leistungsstufe", "mittel") == "mittel"]
-        schwach = [s for s in s_list if s.get("Leistungsstufe", "schwach") == "schwach"]
-        
-        random.shuffle(stark)
-        random.shuffle(mittel)
-        random.shuffle(schwach)
-        
-        if rest_strategie == "Rest als kleinere Gruppe zusammenfassen":
+    # Berechnung der Kapazitäten je nach Modus (Feste Gruppengröße vs. Anzahl Gruppen)
+    if size_mode == "Anzahl der Gruppen":
+        num_groups = max(1, num_total_groups)
+        base = n // num_groups
+        extra = n % num_groups
+        capacities = [base + (1 if i < extra else 0) for i in range(num_groups)]
+    else:
+        ziel_groesse = num_per_group
+        if "kleinere Gruppe" in rest_strategie:
             capacities = []
             rem = n
             while rem > 0:
@@ -426,9 +318,27 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
             base = n // num_groups
             extra = n % num_groups
             capacities = [base + (1 if i < extra else 0) for i in range(num_groups)]
-            
-        num_groups = len(capacities)
-        gruppen = [[] for _ in range(num_groups)]
+
+    num_groups = len(capacities)
+    gruppen = [[] for _ in range(num_groups)]
+    
+    if kategorie == "Zufällig":
+        random.shuffle(s_list)
+        for idx, student in enumerate(s_list):
+            # Verteile der Reihe nach auf die vorgegebenen Gruppenkapazitäten
+            for g_idx in range(num_groups):
+                if len(gruppen[g_idx]) < capacities[g_idx]:
+                    gruppen[g_idx].append(student)
+                    break
+                
+    elif kategorie == "Kompetenzorientiert":
+        stark = [s for s in s_list if s.get("Leistungsstufe") == "stark"]
+        mittel = [s for s in s_list if s.get("Leistungsstufe", "mittel") == "mittel"]
+        schwach = [s for s in s_list if s.get("Leistungsstufe", "schwach") == "schwach"]
+        
+        random.shuffle(stark)
+        random.shuffle(mittel)
+        random.shuffle(schwach)
         
         single_indices = [i for i, cap in enumerate(capacities) if cap == 1]
         for idx in single_indices:
@@ -462,12 +372,12 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, ziel_groesse, rest_st
 
 
 # =============================================================================
-# ZENTRIERTE GRID-DARSTELLUNG FÜR PRÄSENTATION
+# PRÄSENTATIONS-GRID
 # =============================================================================
 def render_groups_grid(groups_subset, start_index=1, title_prefix="Gruppe"):
-    for i in range(0, len(groups_subset), 3):
-        cols = st.columns(3)
-        for j in range(3):
+    for i in range(0, len(groups_subset), 2):
+        cols = st.columns(2)
+        for j in range(2):
             group_idx = i + j
             if group_idx < len(groups_subset):
                 with cols[j]:
@@ -484,7 +394,7 @@ def render_groups_grid(groups_subset, start_index=1, title_prefix="Gruppe"):
 # =============================================================================
 # 4. HEADER & INFO-BEREICH
 # =============================================================================
-st.markdown("<h1 class='centered-text'>👥 Kompetenzorientierte Gruppen</h1>", unsafe_allow_html=True)
+st.markdown("<h2 class='centered-text'>👥 Kompetenzorientierte Gruppen</h2>", unsafe_allow_html=True)
 
 with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
     st.markdown("""
@@ -499,13 +409,13 @@ with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
 
     ### 🔒 Datenschutz & Datenspeicherung
     * **Keine dauerhafte Speicherung:** Alle eingegebenen Namen, Anwesenheiten und Leistungsstufen werden ausschließlich temporär im Arbeitsspeicher (Session State) deines aktuellen Browser-Tabs verarbeitet. 
-    * **Keine Cloud-Speicherung:** Es werden keine personenbezogenen Daten (wie Schülernamen) in einer Datenbank gespeichert oder an Dritte übertragen. Sobald du den Browser-Tab schließt, werden die Daten vollständig gelöscht.
+    * **Keine Cloud-Speicherung:** Es werden keine personenbezogenen Daten in einer Datenbank gespeichert oder an Dritte übertragen. Sobald du den Browser-Tab schließt, werden die Daten vollständig gelöscht.
 
     ---
 
     ### ⚠️ Haftungsausschluss & KI-Hinweis
     * Dieses Tool wurde mithilfe einer Künstlichen Intelligenz (KI) erstellt. 
-    * Es wird keinerlei Verantwortung, Garantie oder Haftung für die fehlerfreie Funktion des Codes, die Richtigkeit der Gruppeneinteilungen oder den Datenschutz bei externem Hosting (z. B. auf Streamlit Community Cloud) übernommen. Die Nutzung erfolgt auf eigene Verantwortung.
+    * Es wird keinerlei Verantwortung, Garantie oder Haftung für die fehlerfreie Funktion des Codes, die Richtigkeit der Gruppeneinteilungen oder den Datenschutz übernommen. Die Nutzung erfolgt auf eigene Verantwortung.
     """)
 
 
@@ -522,15 +432,17 @@ if st.session_state.show_presentation and "generierte_gruppen" in st.session_sta
             current_anwesende = get_anwesende_schueler()
             if current_anwesende:
                 kat = st.session_state.get("last_kategorie", "Kompetenzorientiert")
-                groesse = st.session_state.get("last_ziel_groesse", 3)
+                smode = st.session_state.get("last_size_mode", "Feste Gruppengröße")
+                n_per = st.session_state.get("last_num_per_group", 3)
+                n_tot = st.session_state.get("last_num_total_groups", 3)
                 strat = st.session_state.get("last_rest_strategie", "Rest gleichmäßig auf bestehende Gruppen aufteilen")
                 num_t = st.session_state.get("last_num_themen", 3)
                 st.session_state.generierte_gruppen = generiere_gruppen_dynamisch(
-                    current_anwesende, kat, groesse, strat, num_t
+                    current_anwesende, kat, smode, n_per, n_tot, strat, num_t
                 )
                 st.rerun()
 
-    st.markdown("<h2 class='centered-text' style='margin-top: 1.5rem;'>🎯 Gruppeneinteilung</h2>", unsafe_allow_html=True)
+    st.markdown("<h3 class='centered-text' style='margin-top: 1.2rem;'>🎯 Gruppeneinteilung</h3>", unsafe_allow_html=True)
     st.write("")
 
     res_data = st.session_state.generierte_gruppen
@@ -554,21 +466,18 @@ else:
     st.markdown("<h3 class='centered-text'>📋 Lerngruppe & Anwesenheit</h3>", unsafe_allow_html=True)
     st.write("")
     
-    top_col1, top_col2 = st.columns([2.5, 1.5], gap="small")
-    with top_col1:
-        st.write("Excel-Liste hochladen:")
-        uploaded_excel = st.file_uploader(
-            "Excel-Liste hochladen", 
-            type=["xlsx", "xls"], 
-            key=f"excel_uploader_{st.session_state.uploader_key}",
-            label_visibility="collapsed"
-        )
-    with top_col2:
-        st.markdown("<div class='btn-new-list-container'>", unsafe_allow_html=True)
-        if st.button("➕ Neue leere Liste erstellen", use_container_width=True):
-            st.session_state.schueler_df = pd.DataFrame(columns=["Anwesend", "Vorname", "Nachname", "Leistungsstufe"])
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+    # 1. EXCEL-UPLOAD & NEUE LISTE ERSTELLEN
+    st.write("**Excel-Liste hochladen:**")
+    uploaded_excel = st.file_uploader(
+        "Excel-Liste hochladen", 
+        type=["xlsx", "xls"], 
+        key=f"excel_uploader_{st.session_state.uploader_key}",
+        label_visibility="collapsed"
+    )
+    
+    if st.button("➕ Neue leere Liste erstellen", use_container_width=True):
+        st.session_state.schueler_df = pd.DataFrame(columns=["Anwesend", "Vorname", "Nachname", "Leistungsstufe"])
+        st.rerun()
 
     if uploaded_excel is not None:
         try:
@@ -598,100 +507,102 @@ else:
             st.error(f"Fehler beim Einlesen: {e}")
 
     st.write("")
-    st.write("")
 
-    col_widths = [1.0, 2.0, 2.0, 1.5, 1.5, 1.5, 0.6]
+    # 2. TABELLE
+    with st.container():
+        col_widths = [0.6, 1.8, 1.8, 1.0, 1.0, 1.0, 0.5]
 
-    header_cols = st.columns(col_widths)
-    header_cols[0].markdown("<p class='table-header th-da'>Da?</p>", unsafe_allow_html=True)
-    header_cols[1].markdown("<p class='table-header th-vn'>Vorname</p>", unsafe_allow_html=True)
-    header_cols[2].markdown("<p class='table-header th-nn'>Nachname</p>", unsafe_allow_html=True)
-    header_cols[4].markdown("<p class='table-header th-komp'>Kompetenz</p>", unsafe_allow_html=True)
+        header_cols = st.columns(col_widths)
+        header_cols[0].markdown("<p class='table-header th-da'>Da?</p>", unsafe_allow_html=True)
+        header_cols[1].markdown("<p class='table-header th-vn'>Vorname</p>", unsafe_allow_html=True)
+        header_cols[2].markdown("<p class='table-header th-nn'>Nachname</p>", unsafe_allow_html=True)
+        header_cols[4].markdown("<p class='table-header th-komp'>Kompetenz</p>", unsafe_allow_html=True)
 
-    if not st.session_state.schueler_df.empty:
-        for idx, row in st.session_state.schueler_df.iterrows():
-            c1, c2, c3, c4, c5, c6, c7 = st.columns(col_widths)
-            
-            v_name_str = str(row['Vorname'])
-            n_name_str = str(row['Nachname'])
-            aktuelle_stufe = str(row["Leistungsstufe"]).lower()
-
-            with c1:
-                cb_key = f"anw_{idx}_{v_name_str}_{n_name_str}"
-                st.checkbox(
-                    "", 
-                    value=bool(row["Anwesend"]), 
-                    key=cb_key, 
-                    on_change=set_anwesend, 
-                    args=(idx, cb_key), 
-                    label_visibility="collapsed"
-                )
-            
-            with c2:
-                st.markdown(f"<div class='row-vn'><b>{v_name_str}</b></div>", unsafe_allow_html=True)
+        if not st.session_state.schueler_df.empty:
+            for idx, row in st.session_state.schueler_df.iterrows():
+                c1, c2, c3, c4, c5, c6, c7 = st.columns(col_widths)
                 
-            with c3:
-                st.markdown(f"<div class='row-nn'>{n_name_str}</div>", unsafe_allow_html=True)
+                v_name_str = str(row['Vorname'])
+                n_name_str = str(row['Nachname'])
+                aktuelle_stufe = str(row["Leistungsstufe"]).lower()
 
-            with c4:
-                st.button(
-                    "schwach", 
-                    key=f"btn_schwach_{idx}_{v_name_str}_{n_name_str}", 
-                    type="primary" if aktuelle_stufe == "schwach" else "tertiary",
-                    on_click=set_stufe,
-                    args=(idx, "schwach")
-                )
+                with c1:
+                    cb_key = f"anw_{idx}_{v_name_str}_{n_name_str}"
+                    st.checkbox(
+                        "", 
+                        value=bool(row["Anwesend"]), 
+                        key=cb_key, 
+                        on_change=set_anwesend, 
+                        args=(idx, cb_key), 
+                        label_visibility="collapsed"
+                    )
+                
+                with c2:
+                    st.markdown(f"<div class='row-vn'>{v_name_str}</div>", unsafe_allow_html=True)
+                    
+                with c3:
+                    st.markdown(f"<div class='row-nn'>{n_name_str}</div>", unsafe_allow_html=True)
 
-            with c5:
-                st.button(
-                    "mittel", 
-                    key=f"btn_mittel_{idx}_{v_name_str}_{n_name_str}", 
-                    type="primary" if aktuelle_stufe == "mittel" else "tertiary",
-                    on_click=set_stufe,
-                    args=(idx, "mittel")
-                )
+                with c4:
+                    st.button(
+                        "schwach", 
+                        key=f"btn_schwach_{idx}_{v_name_str}_{n_name_str}", 
+                        type="primary" if aktuelle_stufe == "schwach" else "tertiary",
+                        on_click=set_stufe,
+                        args=(idx, "schwach")
+                    )
 
-            with c6:
-                st.button(
-                    "stark", 
-                    key=f"btn_stark_{idx}_{v_name_str}_{n_name_str}", 
-                    type="primary" if aktuelle_stufe == "stark" else "tertiary",
-                    on_click=set_stufe,
-                    args=(idx, "stark")
-                )
+                with c5:
+                    st.button(
+                        "mittel", 
+                        key=f"btn_mittel_{idx}_{v_name_str}_{n_name_str}", 
+                        type="primary" if aktuelle_stufe == "mittel" else "tertiary",
+                        on_click=set_stufe,
+                        args=(idx, "mittel")
+                    )
 
-            with c7:
-                st.button(
-                    "🗑️", 
-                    key=f"btn_del_{idx}_{v_name_str}_{n_name_str}",
-                    on_click=delete_student,
-                    args=(idx,)
-                )
-    else:
-        st.info("Die Liste ist aktuell leer. Füge unten einfach erste Lernende hinzu!")
+                with c6:
+                    st.button(
+                        "stark", 
+                        key=f"btn_stark_{idx}_{v_name_str}_{n_name_str}", 
+                        type="primary" if aktuelle_stufe == "stark" else "tertiary",
+                        on_click=set_stufe,
+                        args=(idx, "stark")
+                    )
 
-    anwesende_schueler = get_anwesende_schueler()
-    
-    if not st.session_state.schueler_df.empty:
-        anwesende_df_stats = st.session_state.schueler_df[st.session_state.schueler_df["Anwesend"] == True]
-        anzahl_schwach = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "schwach"])
-        anzahl_mittel = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "mittel"])
-        anzahl_stark = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "stark"])
-    else:
-        anzahl_schwach = anzahl_mittel = anzahl_stark = 0
+                with c7:
+                    st.button(
+                        "🗑️", 
+                        key=f"btn_del_{idx}_{v_name_str}_{n_name_str}",
+                        on_click=delete_student,
+                        args=(idx,)
+                    )
+        else:
+            st.info("Die Liste ist aktuell leer. Füge unten einfach erste Lernende hinzu!")
 
-    s1, s2, s3, s4, s5, s6, s7 = st.columns(col_widths)
-    s1.markdown(f"<div class='sum-number'><b>{len(anwesende_schueler)}</b>/{len(st.session_state.schueler_df)}</div>", unsafe_allow_html=True)
-    s2.markdown("<div class='sum-label'><b>Gesamt</b></div>", unsafe_allow_html=True)
-    s3.markdown("")
-    s4.markdown(f"<div class='summary-pill sum-badge'>🔴 {anzahl_schwach}</div>", unsafe_allow_html=True)
-    s5.markdown(f"<div class='summary-pill sum-badge'>🟡 {anzahl_mittel}</div>", unsafe_allow_html=True)
-    s6.markdown(f"<div class='summary-pill sum-badge'>🟢 {anzahl_stark}</div>", unsafe_allow_html=True)
-    s7.markdown("")
+        anwesende_schueler = get_anwesende_schueler()
+        
+        if not st.session_state.schueler_df.empty:
+            anwesende_df_stats = st.session_state.schueler_df[st.session_state.schueler_df["Anwesend"] == True]
+            anzahl_schwach = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "schwach"])
+            anzahl_mittel = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "mittel"])
+            anzahl_stark = len(anwesende_df_stats[anwesende_df_stats["Leistungsstufe"] == "stark"])
+        else:
+            anzahl_schwach = anzahl_mittel = anzahl_stark = 0
 
+        s1, s2, s3, s4, s5, s6, s7 = st.columns(col_widths)
+        s1.markdown(f"<div class='sum-number'><b>{len(anwesende_schueler)}</b>/{len(st.session_state.schueler_df)}</div>", unsafe_allow_html=True)
+        s2.markdown("<div class='sum-label'><b>Gesamt</b></div>", unsafe_allow_html=True)
+        s3.markdown("")
+        s4.markdown(f"<div class='summary-pill'>🔴 {anzahl_schwach}</div>", unsafe_allow_html=True)
+        s5.markdown(f"<div class='summary-pill'>🟡 {anzahl_mittel}</div>", unsafe_allow_html=True)
+        s6.markdown(f"<div class='summary-pill'>🟢 {anzahl_stark}</div>", unsafe_allow_html=True)
+        s7.markdown("")
+
+    # 3. MANUELLES HINZUFÜGEN
     with st.form("add_student_form", clear_on_submit=True):
         st.markdown("<p style='font-size: 0.85rem; font-weight: 600; color: #718096; margin-bottom: 8px;'>➕ Lernende/n hinzufügen</p>", unsafe_allow_html=True)
-        f_col1, f_col2, f_col3, f_col4 = st.columns([2.2, 2.2, 1.8, 2.2])
+        f_col1, f_col2, f_col3, f_col4 = st.columns([1.8, 1.8, 1.1, 1.3])
         new_vname = f_col1.text_input("Vorname", placeholder="Vorname", label_visibility="collapsed")
         new_nname = f_col2.text_input("Nachname", placeholder="Nachname", label_visibility="collapsed")
         new_stufe = f_col3.selectbox("Stufe", options=["mittel", "schwach", "stark"], label_visibility="collapsed")
@@ -702,47 +613,88 @@ else:
                 add_student(new_vname, new_nname, new_stufe)
                 st.rerun()
 
-    st.markdown("<h3 class='centered-text'>⚙️ Zuteilungsmodus & Generierung</h3>", unsafe_allow_html=True)
+    # 4. ZUTEILUNGSMODUS & OPTIONEN
+    st.markdown("<h3 class='centered-text' style='margin-top: 1rem;'>⚙️ Zuteilungsmodus & Generierung</h3>", unsafe_allow_html=True)
     st.write("")
 
+    # Option 1: Art der Gruppeneinteilung
+    st.markdown("**Art der Gruppeneinteilung**")
     kategorie = st.radio(
         "Art der Gruppeneinteilung",
         options=["Kompetenzorientiert", "Zufällig", "Gruppenpuzzle"],
         index=0,
-        horizontal=True
+        horizontal=True,
+        label_visibility="collapsed"
     )
 
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown('<div class="dropdown-links">', unsafe_allow_html=True)
-        if kategorie == "Gruppenpuzzle":
-            ziel_groesse = 3
-            num_themen = st.selectbox(
-                "Anzahl der Themen (Expertengruppen)",
-                options=[2, 3, 4, 5, 6],
-                index=1
-            )
-        else:
-            num_themen = 3
-            ziel_groesse = st.selectbox(
-                "Gewünschte Gruppengröße",
-                options=[2, 3, 4, 5],
-                format_func=lambda x: f"{x}er-Gruppen"
-            )
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-    with col2:
-        st.markdown('<div class="dropdown-rechts">', unsafe_allow_html=True)
-        rest_strategie = st.selectbox(
-            "Umgang mit unvollständigen Resten",
-            options=[
-                "Rest gleichmäßig auf bestehende Gruppen aufteilen",
-                "Rest als kleinere Gruppe zusammenfassen"
-            ]
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.write("")
 
+    # Option 2: Gruppengröße / Methode (Number Input mit Pfeilen)
+    if kategorie == "Gruppenpuzzle":
+        st.markdown("**Anzahl der Themen (Expertengruppen)**")
+        num_themen = st.number_input(
+            "Anzahl Themen",
+            min_value=2,
+            max_value=6,
+            value=st.session_state.selected_themen,
+            step=1,
+            key="selected_themen",
+            label_visibility="collapsed"
+        )
+        size_mode = "Feste Gruppengröße"
+        num_per_group = 3
+        num_total_groups = 3
+    else:
+        num_themen = 3
+        st.markdown("**Gruppengröße / Einteilung**")
+        size_mode = st.radio(
+            "Einteilungs-Methode",
+            options=["Feste Gruppengröße", "Anzahl der Gruppen"],
+            key="size_mode",
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+        
+        if size_mode == "Feste Gruppengröße":
+            st.markdown("<p style='font-size: 0.85rem; font-weight: 600; color: #4a5568; margin-top: 4px;'>Personen pro Gruppe:</p>", unsafe_allow_html=True)
+            num_per_group = st.number_input(
+                "Personen pro Gruppe",
+                min_value=2,
+                max_value=10,
+                value=st.session_state.num_per_group,
+                step=1,
+                key="num_per_group",
+                label_visibility="collapsed"
+            )
+            num_total_groups = 3
+        else:
+            st.markdown("<p style='font-size: 0.85rem; font-weight: 600; color: #4a5568; margin-top: 4px;'>Lerngruppe aufteilen in (Anzahl Gruppen):</p>", unsafe_allow_html=True)
+            num_total_groups = st.number_input(
+                "Anzahl Gruppen",
+                min_value=2,
+                max_value=10,
+                value=st.session_state.num_total_groups,
+                step=1,
+                key="num_total_groups",
+                label_visibility="collapsed"
+            )
+            num_per_group = 3
+
+    st.write("")
+
+    # Option 3: Umgang mit Resten (ohne den Vorschau-Text)
+    st.markdown("**Umgang mit Resten**")
+    rest_strategie = st.radio(
+        "Strategie für Reste wählen",
+        options=[
+            "Rest gleichmäßig auf bestehende Gruppen aufteilen",
+            "Rest als kleinere Gruppe zusammenfassen"
+        ],
+        key="selected_rest",
+        label_visibility="collapsed"
+    )
+
+    st.write("")
     generate_btn = st.button("🎲 Gruppen generieren & Präsentieren", type="primary", use_container_width=True)
 
     if generate_btn:
@@ -750,13 +702,17 @@ else:
             st.error("Bitte wähle mindestens einen anwesenden Lernenden aus!")
         else:
             st.session_state.last_kategorie = kategorie
-            st.session_state.last_ziel_groesse = ziel_groesse
+            st.session_state.last_size_mode = size_mode
+            st.session_state.last_num_per_group = num_per_group
+            st.session_state.last_num_total_groups = num_total_groups
             st.session_state.last_rest_strategie = rest_strategie
             st.session_state.last_num_themen = num_themen
             st.session_state.generierte_gruppen = generiere_gruppen_dynamisch(
                 anwesende_schueler, 
                 kategorie, 
-                ziel_groesse, 
+                size_mode,
+                num_per_group,
+                num_total_groups,
                 rest_strategie,
                 num_themen
             )
