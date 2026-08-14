@@ -395,7 +395,7 @@ def render_groups_grid(groups_subset, start_index=1, title_prefix="Gruppe"):
 # =============================================================================
 # 4. HEADER & INFO-BEREICH
 # =============================================================================
-st.markdown("<h2 class='centered-text'>👥 Kompetenzorientierte Gruppen</h2>", unsafe_allow_html=True)
+st.markdown("<h2 class='centered-text'>👥 Intelligente Gruppeneinteilung</h2>", unsafe_allow_html=True)
 
 with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
     st.markdown("""
