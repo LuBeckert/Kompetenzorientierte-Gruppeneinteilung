@@ -400,11 +400,16 @@ st.markdown("<h2 class='centered-text'>👥 Kompetenzorientierte Gruppen</h2>", 
 with st.expander("ℹ️ Anleitung, Rechtliches & Datenschutz"):
     st.markdown("""
     ### 🛠️ Kurzanleitung
-    1. **Liste der Lernenden erstellen:** Lade eine Excel-Tabelle (.xlsx/.xls) hoch oder trage Lernende manuell unten ein.
+    1. **Liste der Lernenden erstellen:** 
+       - Ziehe eine Excel-Tabelle (`.xlsx`/`.xls`) bequem per **Drag & Drop** in das Upload-Feld (oder erstelle eine leere Liste).
+       - Trage fehlende Lernende bei Bedarf manuell unten nach.
     2. **Anwesenheit & Kompetenz:** 
-        - Markiere anwesende Lernende in der Spalte **„Da?“**.
-        - Weise über die Buttons **schwach**, **mittel** oder **stark** das jeweilige Niveau zu.
-    3. **Gruppen generieren:** Wähle unten den Modus und klicke auf **„Gruppen generieren & Präsentieren“**.
+       - Markiere anwesende Lernende in der Spalte **„Da?“**.
+       - Weise über die Buttons **schwach**, **mittel** oder **stark** das jeweilige Niveau zu.
+    3. **Speicherung & Sicherung (JSON):** 
+       - Speichere deinen aktuellen Klassenstand inkl. Anwesenheit und Kompetenzstufen als `.json`-Datei ab, um sie beim nächsten Mal direkt wieder einzuladen.
+    4. **Gruppen generieren:** 
+       - Wähle unten den Modus, passe die Parameter an und klicke auf **„Gruppen generieren & Präsentieren“**.
 
     ---
 
@@ -468,7 +473,7 @@ else:
     st.write("")
     
     # 1. EXCEL-UPLOAD & NEUE LISTE ERSTELLEN
-    st.write("**Excel-Liste hochladen:**")
+    st.write("**Excel-Liste hochladen (per Drag & Drop oder Klick):**")
     uploaded_excel = st.file_uploader(
         "Excel-Liste hochladen", 
         type=["xlsx", "xls"], 
@@ -619,11 +624,11 @@ else:
     # =========================================================================
     # 4. EINGEKLAPPTE LISTENVERWALTUNG (JSON)
     # =========================================================================
-    with st.expander("💾 Listenverwaltung (JSON)"):
+    with st.expander("💾 Klassenliste speichern & laden (JSON)"):
         st.markdown("""
-        Hier kannst du den aktuellen Zustand deiner Klasse inklusive **Anwesenheiten** und **Kompetenzstufen** sichern oder eine gespeicherte Liste laden.
-        * **Download:** Lädt deine aktuelle Tabelle als `.json`-Datei herunter.
-        * **Upload:** Liest eine zuvor gespeicherte `.json`-Datei ein und ersetzt deine aktuelle Tabelle.
+        Hier kannst du den aktuellen Zustand deiner Klasse inklusive **Anwesenheiten** und **Kompetenzstufen** sichern oder eine gespeicherte Liste wiederherstellen.
+        * **Download:** Lädt deine aktuelle Tabelle als `.json`-Datei auf deinen Computer herunter.
+        * **Upload:** Ziehe eine gespeicherte `.json`-Datei per **Drag & Drop** in das Feld unten, um die Liste sofort wieder einzuladen.
         """)
         st.write("")
 
@@ -640,7 +645,7 @@ else:
         )
 
         st.write("")
-        st.markdown("**JSON-Datei hochladen & Liste aktualisieren:**")
+        st.markdown("**JSON-Datei hochladen (per Drag & Drop oder Klick):**")
         
         uploaded_json = st.file_uploader(
             "JSON-Datei hochladen", 
