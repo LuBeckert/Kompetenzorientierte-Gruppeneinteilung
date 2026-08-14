@@ -3,26 +3,34 @@ import pandas as pd
 import random
 
 # =============================================================================
-# 1. KONFIGURATION & UNBEUGSAMES DESKTOP-LAYOUT
+# 1. KONFIGURATION & UNBEUGSAMES DESKTOP-LAYOUT MIT HORIZONTALEM SCROLLING
 # =============================================================================
 st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="wide")
 
-# Absolutes Fixieren des Renders auf eine Mindestbreite von 1100px
 st.markdown(
     """
     <style>
-        /* 1. Erzwinge globale Mindestbreite auf allen Root-Containern */
-        html, body, [data-testid="stAppViewContainer"], .main, .block-container {
+        /* 1. Viewport & Hauptcontainer für horizontales Scrollen freigeben */
+        html, body {
+            overflow-x: auto !important;
+        }
+
+        [data-testid="stAppViewContainer"], 
+        .main, 
+        section.main {
             min-width: 1100px !important;
+            overflow-x: auto !important;
         }
 
         /* 2. Zentriere den Hauptinhalt und definiere feste Breite */
         .main .block-container {
             width: 1100px !important;
+            min-width: 1100px !important;
             max-width: 1100px !important;
             margin: 0 auto !important;
             padding-top: 1.5rem !important;
             padding-bottom: 3rem !important;
+            overflow-x: visible !important;
         }
 
         /* 3. Streamlit Flexbox-Grid kompromisslos nebeneinander zwingen */
@@ -246,7 +254,7 @@ st.markdown(
 )
 
 # =============================================================================
-# 2. INITIALISIERUNG & STATE (12 DIVERSE SCHÜLER INKL. DOPPELTER VORNAMEN)
+# 2. INITIALISIERUNG & STATE
 # =============================================================================
 DEFAULT_SCHUELER = [
     {"Anwesend": True, "Vorname": "David", "Nachname": "Weber", "Leistungsstufe": "stark"},
