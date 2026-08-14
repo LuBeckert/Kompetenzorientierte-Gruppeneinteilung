@@ -3,26 +3,26 @@ import pandas as pd
 import random
 
 # =============================================================================
-# 1. KONFIGURATION & UNBEUGSAMES DESKTOP-LAYOUT MIT HORIZONTALEM SCROLLING
+# 1. KONFIGURATION & STRIKTES HORIZONTAL-SCROLLING (WEBKIT-FIX)
 # =============================================================================
 st.set_page_config(page_title="Gruppeneinteilung", page_icon="👥", layout="wide")
 
 st.markdown(
     """
     <style>
-        /* 1. Viewport & Hauptcontainer für horizontales Scrollen freigeben */
-        html, body {
-            overflow-x: auto !important;
-        }
-
+        /* 1. Sämtliche Streamlit-Standard-Container für Scrollbars freischalten */
+        html, body, 
         [data-testid="stAppViewContainer"], 
+        [data-testid="stHeader"],
         .main, 
-        section.main {
-            min-width: 1100px !important;
+        section.main,
+        div[data-testid="stAppViewBlockContainer"] {
             overflow-x: auto !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important; /* Wichtig für flüssiges Scrollen auf iOS/iPhone */
         }
 
-        /* 2. Zentriere den Hauptinhalt und definiere feste Breite */
+        /* 2. Den Inhalts-Container starr auf 1100px festlegen */
         .main .block-container {
             width: 1100px !important;
             min-width: 1100px !important;
@@ -30,25 +30,26 @@ st.markdown(
             margin: 0 auto !important;
             padding-top: 1.5rem !important;
             padding-bottom: 3rem !important;
-            overflow-x: visible !important;
+            display: block !important;
         }
 
-        /* 3. Streamlit Flexbox-Grid kompromisslos nebeneinander zwingen */
+        /* 3. Flexbox-Grid kompromisslos nebeneinander zwingen */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
-            min-width: 100% !important;
+            width: 1100px !important;
+            min-width: 1100px !important;
             align-items: center !important; 
         }
 
-        /* 4. Einzelne Spalten dürfen nicht unter eine Minimalbreite schrumpfen */
+        /* 4. Einzelne Spalten innerhalb der 1100px flexibel halten */
         div[data-testid="stColumn"] {
             flex: 1 1 auto !important;
             min-width: 0 !important;
         }
 
-        /* 5. Zeilenumbrüche innerhalb von Tabellenelementen/Texten komplett verbieten */
+        /* 5. Zeilenumbrüche innerhalb von Texten verbieten */
         .table-header, .row-vn, .row-nn, div[data-testid="stHorizontalBlock"] p, .summary-pill {
             white-space: nowrap !important;
             word-break: keep-all !important;
