@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
+import json
 
 # =============================================================================
 # 1. KONFIGURATION & RESPONSIVES, ZENTRIERTES LAYOUT
@@ -178,6 +179,8 @@ if "show_presentation" not in st.session_state:
     st.session_state.show_presentation = False
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
+if "json_uploader_key" not in st.session_state:
+    st.session_state.json_uploader_key = 100
 
 if "size_mode" not in st.session_state:
     st.session_state.size_mode = "Feste Gruppengröße"
@@ -298,7 +301,6 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, size_mode, num_per_gr
             "stammgruppen": stammgruppen
         }
 
-    # Berechnung der Kapazitäten je nach Modus (Feste Gruppengröße vs. Anzahl Gruppen)
     if size_mode == "Anzahl der Gruppen":
         num_groups = max(1, num_total_groups)
         base = n // num_groups
@@ -325,7 +327,6 @@ def generiere_gruppen_dynamisch(schueler_liste, kategorie, size_mode, num_per_gr
     if kategorie == "Zufällig":
         random.shuffle(s_list)
         for idx, student in enumerate(s_list):
-            # Verteile der Reihe nach auf die vorgegebenen Gruppenkapazitäten
             for g_idx in range(num_groups):
                 if len(gruppen[g_idx]) < capacities[g_idx]:
                     gruppen[g_idx].append(student)
@@ -613,11 +614,60 @@ else:
                 add_student(new_vname, new_nname, new_stufe)
                 st.rerun()
 
-    # 4. ZUTEILUNGSMODUS & OPTIONEN
+    st.write("")
+
+    # =========================================================================
+    # 4. EINGEKLAPPTE LISTENVERWALTUNG (JSON)
+    # =========================================================================
+    with st.expander("💾 Listenverwaltung (JSON)"):
+        st.markdown("""
+        Hier kannst du den aktuellen Zustand deiner Klasse inklusive **Anwesenheiten** und **Kompetenzstufen** sichern oder eine gespeicherte Liste laden.
+        * **Download:** Lädt deine aktuelle Tabelle als `.json`-Datei herunter.
+        * **Upload:** Liest eine zuvor gespeicherte `.json`-Datei ein und ersetzt deine aktuelle Tabelle.
+        """)
+        st.write("")
+
+        # JSON Download
+        current_data = st.session_state.schueler_df.to_dict("records")
+        json_string = json.dumps(current_data, ensure_ascii=False, indent=2)
+
+        st.download_button(
+            label="📥 Aktuelle Liste als JSON herunterladen",
+            data=json_string,
+            file_name="lerngruppe.json",
+            mime="application/json",
+            use_container_width=True
+        )
+
+        st.write("")
+        st.markdown("**JSON-Datei hochladen & Liste aktualisieren:**")
+        
+        uploaded_json = st.file_uploader(
+            "JSON-Datei hochladen", 
+            type=["json"], 
+            key=f"json_uploader_{st.session_state.json_uploader_key}",
+            label_visibility="collapsed"
+        )
+
+        if uploaded_json is not None:
+            try:
+                loaded_data = json.load(uploaded_json)
+                if isinstance(loaded_data, list):
+                    st.session_state.schueler_df = pd.DataFrame(loaded_data)
+                    st.session_state.json_uploader_key += 1
+                    st.success("Liste erfolgreich aus JSON aktualisiert!")
+                    st.rerun()
+                else:
+                    st.error("Ungültiges Format: Die JSON-Datei muss eine Liste von Personen enthalten.")
+            except Exception as e:
+                st.error(f"Fehler beim Laden der JSON-Datei: {e}")
+
+    # =========================================================================
+    # 5. DAUERHAFT SICHTBARER ZUTEILUNGSMODUS
+    # =========================================================================
     st.markdown("<h3 class='centered-text' style='margin-top: 1rem;'>⚙️ Zuteilungsmodus & Generierung</h3>", unsafe_allow_html=True)
     st.write("")
 
-    # Option 1: Art der Gruppeneinteilung
     st.markdown("**Art der Gruppeneinteilung**")
     kategorie = st.radio(
         "Art der Gruppeneinteilung",
@@ -629,7 +679,6 @@ else:
 
     st.write("")
 
-    # Option 2: Gruppengröße / Methode (Number Input mit Pfeilen)
     if kategorie == "Gruppenpuzzle":
         st.markdown("**Anzahl der Themen (Expertengruppen)**")
         num_themen = st.number_input(
@@ -682,7 +731,6 @@ else:
 
     st.write("")
 
-    # Option 3: Umgang mit Resten (ohne den Vorschau-Text)
     st.markdown("**Umgang mit Resten**")
     rest_strategie = st.radio(
         "Strategie für Reste wählen",
